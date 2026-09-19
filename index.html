@@ -39,8 +39,6 @@
       padding: 20px;
     }
 
-    /* HEADER */
-
     header {
       background: #0b1728;
       border-bottom: 1px solid #1c3048;
@@ -73,8 +71,6 @@
       font-size: 12px;
       color: #26d97c;
     }
-
-    /* AUTH */
 
     .auth-wrapper {
       min-height: calc(100vh - 70px);
@@ -181,6 +177,7 @@
       border-radius: 8px;
       font-size: 14px;
       display: none;
+      word-break: break-word;
     }
 
     .message.success {
@@ -194,8 +191,6 @@
       background: rgba(227,75,95,.12);
       color: #ff7283;
     }
-
-    /* DASHBOARD */
 
     .dashboard {
       padding: 25px 0 60px;
@@ -242,10 +237,6 @@
       font-size: 38px;
       font-weight: 800;
       margin: 8px 0;
-    }
-
-    .currency {
-      color: #26d97c;
     }
 
     .cards {
@@ -336,12 +327,6 @@
     .sell {
       background: #e34b5f;
       color: white;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
     }
 
     .table-wrapper {
@@ -474,10 +459,6 @@
         grid-template-columns: 1fr;
       }
 
-      .form-row {
-        grid-template-columns: 1fr;
-      }
-
       .topbar {
         align-items: flex-start;
       }
@@ -498,9 +479,7 @@
   </div>
 </header>
 
-<!-- AUTH -->
 <div id="authScreen" class="auth-wrapper">
-
   <div class="auth-card">
 
     <h1>Vertex FX</h1>
@@ -510,8 +489,6 @@
       <button id="loginTab" class="active" onclick="showLogin()">Login</button>
       <button id="registerTab" onclick="showRegister()">Create Account</button>
     </div>
-
-    <!-- LOGIN -->
 
     <form id="loginForm">
 
@@ -536,8 +513,6 @@
       </button>
 
     </form>
-
-    <!-- REGISTER -->
 
     <form id="registerForm" class="hidden">
 
@@ -582,18 +557,13 @@
     <div id="authMessage" class="message"></div>
 
   </div>
-
 </div>
-
-
-<!-- USER DASHBOARD -->
 
 <div id="dashboardScreen" class="hidden">
 
   <div class="container dashboard">
 
     <div class="topbar">
-
       <div class="welcome">
         <h2>Welcome, <span id="userName">User</span></h2>
         <p id="userEmail"></p>
@@ -602,11 +572,7 @@
       <button class="logout" onclick="logout()">
         Logout
       </button>
-
     </div>
-
-
-    <!-- BALANCE -->
 
     <div class="balance-card">
 
@@ -627,9 +593,6 @@
       </button>
 
     </div>
-
-
-    <!-- QUICK CARDS -->
 
     <div class="cards">
 
@@ -657,9 +620,6 @@
 
     </div>
 
-
-    <!-- WALLET -->
-
     <div class="section">
 
       <h2>💰 Wallet</h2>
@@ -670,8 +630,6 @@
       </div>
 
       <div class="grid-2">
-
-        <!-- DEPOSIT -->
 
         <div class="trade-box">
 
@@ -694,15 +652,13 @@
 
           <button
             class="primary-btn"
+            type="button"
             onclick="depositMoney()"
           >
             Deposit with M-Pesa
           </button>
 
         </div>
-
-
-        <!-- WITHDRAW -->
 
         <div class="trade-box">
 
@@ -725,6 +681,7 @@
 
           <button
             class="primary-btn"
+            type="button"
             onclick="withdrawMoney()"
           >
             Request Withdrawal
@@ -741,9 +698,6 @@
       <div id="walletMessage" class="message"></div>
 
     </div>
-
-
-    <!-- TRADING -->
 
     <div class="section">
 
@@ -770,7 +724,6 @@
 
         </div>
 
-
         <div class="trade-box">
 
           <label>Trade Amount (KES)</label>
@@ -786,6 +739,7 @@
 
             <button
               class="buy"
+              type="button"
               onclick="trade('BUY')"
             >
               BUY
@@ -793,6 +747,7 @@
 
             <button
               class="sell"
+              type="button"
               onclick="trade('SELL')"
             >
               SELL
@@ -807,9 +762,6 @@
       <div id="tradeMessage" class="message"></div>
 
     </div>
-
-
-    <!-- TRANSACTIONS -->
 
     <div class="section">
 
@@ -828,18 +780,13 @@
             </tr>
           </thead>
 
-          <tbody id="transactionsTable">
-
-          </tbody>
+          <tbody id="transactionsTable"></tbody>
 
         </table>
 
       </div>
 
     </div>
-
-
-    <!-- TRADES -->
 
     <div class="section">
 
@@ -859,18 +806,13 @@
             </tr>
           </thead>
 
-          <tbody id="tradesTable">
-
-          </tbody>
+          <tbody id="tradesTable"></tbody>
 
         </table>
 
       </div>
 
     </div>
-
-
-    <!-- ADMIN -->
 
     <div class="section admin-box">
 
@@ -883,6 +825,7 @@
       <button
         class="primary-btn"
         style="max-width:250px;"
+        type="button"
         onclick="showAdminLogin()"
       >
         Open Admin Login
@@ -893,9 +836,6 @@
   </div>
 
 </div>
-
-
-<!-- ADMIN SCREEN -->
 
 <div id="adminScreen" class="hidden">
 
@@ -915,7 +855,6 @@
       </button>
 
     </div>
-
 
     <div class="admin-statistics">
 
@@ -940,7 +879,6 @@
       </div>
 
     </div>
-
 
     <div class="section">
 
@@ -967,7 +905,6 @@
       </div>
 
     </div>
-
 
     <div class="section">
 
@@ -1002,9 +939,6 @@
 
 </div>
 
-
-<!-- ADMIN LOGIN MODAL -->
-
 <div
   id="adminModal"
   class="auth-wrapper hidden"
@@ -1037,6 +971,7 @@
 
     <button
       class="primary-btn"
+      type="button"
       onclick="adminLogin()"
     >
       Login as Admin
@@ -1044,6 +979,7 @@
 
     <button
       class="primary-btn secondary-btn"
+      type="button"
       onclick="closeAdminLogin()"
     >
       Cancel
@@ -1055,466 +991,250 @@
 
 </div>
 
-
 <footer>
   Vertex FX © 2026 — Trading and wallet platform
 </footer>
 
-
 <script>
 
-  /* =====================================================
-     GLOBAL STATE
-  ===================================================== */
-
-  let userToken = localStorage.getItem("vertexUserToken") || "";
-  let adminToken = localStorage.getItem("vertexAdminToken") || "";
-
-  let currentUser = null;
+let userToken = localStorage.getItem("vertexUserToken") || "";
+let adminToken = localStorage.getItem("vertexAdminToken") || "";
+let currentUser = null;
 
 
-  /* =====================================================
-     HELPERS
-  ===================================================== */
+/* =========================
+   API
+========================= */
 
-  function apiHeaders(token) {
+function apiHeaders(token) {
 
-    const headers = {
-      "Content-Type": "application/json"
-    };
+  const headers = {
+    "Content-Type": "application/json"
+  };
 
-    if (token) {
-      headers.Authorization = "Bearer " + token;
-    }
-
-    return headers;
+  if (token) {
+    headers.Authorization = "Bearer " + token;
   }
 
+  return headers;
+}
 
-  async function api(url, options = {}) {
+
+async function api(url, options = {}) {
+
+  try {
 
     const response = await fetch(url, options);
+
+    const text = await response.text();
 
     let data;
 
     try {
-      data = await response.json();
-    } catch {
-      data = {
-        success: false,
-        message: "Invalid server response."
-      };
+
+      data = text ? JSON.parse(text) : {};
+
+    } catch (jsonError) {
+
+      console.error("Non-JSON server response:", text);
+
+      throw new Error(
+        "Server returned a non-JSON response. HTTP " +
+        response.status +
+        ". Response: " +
+        text.substring(0, 300)
+      );
+
     }
 
     if (!response.ok) {
+
       throw new Error(
         data.message ||
         data.details ||
-        "Request failed."
+        ("Request failed with HTTP " + response.status)
       );
+
     }
 
     return data;
-  }
 
+  } catch (error) {
 
-  function showMessage(elementId, message, success = true) {
+    console.error("API error:", url, error);
 
-    const element = document.getElementById(elementId);
-
-    element.textContent = message;
-
-    element.className =
-      "message " +
-      (success ? "success" : "error");
+    throw error;
 
   }
 
-
-  function formatMoney(amount) {
-
-    return Number(amount || 0).toLocaleString(
-      "en-KE",
-      {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }
-    );
-
-  }
+}
 
 
-  function formatDate(date) {
+/* =========================
+   HELPERS
+========================= */
 
-    if (!date) return "-";
+function showMessage(elementId, message, success = true) {
 
-    return new Date(date).toLocaleString();
+  const element = document.getElementById(elementId);
 
-  }
+  element.textContent = message;
+
+  element.className =
+    "message " +
+    (success ? "success" : "error");
+
+}
 
 
-  function badge(status) {
+function formatMoney(amount) {
 
-    const value = String(status || "").toLowerCase();
-
-    let className = "pending";
-
-    if (value === "completed") {
-      className = "completed";
+  return Number(amount || 0).toLocaleString(
+    "en-KE",
+    {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }
+  );
 
-    if (
-      value === "failed" ||
-      value === "rejected"
-    ) {
-      className = "failed";
-    }
+}
 
-    if (
-      value === "simulated" ||
-      value === "approved_for_payment"
-    ) {
-      className = "simulated";
-    }
 
-    return `
-      <span class="badge ${className}">
-        ${status}
-      </span>
-    `;
+function formatDate(date) {
 
+  if (!date) return "-";
+
+  return new Date(date).toLocaleString();
+
+}
+
+
+function badge(status) {
+
+  const value = String(status || "").toLowerCase();
+
+  let className = "pending";
+
+  if (value === "completed") {
+    className = "completed";
   }
 
-
-  /* =====================================================
-     AUTH TABS
-  ===================================================== */
-
-  function showLogin() {
-
-    document
-      .getElementById("loginForm")
-      .classList.remove("hidden");
-
-    document
-      .getElementById("registerForm")
-      .classList.add("hidden");
-
-    document
-      .getElementById("loginTab")
-      .classList.add("active");
-
-    document
-      .getElementById("registerTab")
-      .classList.remove("active");
-
+  if (
+    value === "failed" ||
+    value === "rejected"
+  ) {
+    className = "failed";
   }
 
-
-  function showRegister() {
-
-    document
-      .getElementById("loginForm")
-      .classList.add("hidden");
-
-    document
-      .getElementById("registerForm")
-      .classList.remove("hidden");
-
-    document
-      .getElementById("loginTab")
-      .classList.remove("active");
-
-    document
-      .getElementById("registerTab")
-      .classList.add("active");
-
+  if (
+    value === "simulated" ||
+    value === "approved_for_payment"
+  ) {
+    className = "simulated";
   }
 
+  return `
+    <span class="badge ${className}">
+      ${status}
+    </span>
+  `;
 
-  /* =====================================================
-     REGISTER
-  ===================================================== */
-
-  document
-    .getElementById("registerForm")
-    .addEventListener("submit", async function(event) {
-
-      event.preventDefault();
-
-      const name =
-        document.getElementById("registerName").value.trim();
-
-      const email =
-        document.getElementById("registerEmail").value.trim();
-
-      let phone =
-        document.getElementById("registerPhone").value.trim();
-
-      const password =
-        document.getElementById("registerPassword").value;
-
-      if (phone.startsWith("0")) {
-        phone = "254" + phone.substring(1);
-      }
-
-      try {
-
-        const data = await api(
-          "/api/register",
-          {
-            method: "POST",
-            headers: apiHeaders(),
-            body: JSON.stringify({
-              name,
-              email,
-              phone,
-              password
-            })
-          }
-        );
-
-        userToken = data.token;
-
-        localStorage.setItem(
-          "vertexUserToken",
-          userToken
-        );
-
-        currentUser = data.user;
-
-        showDashboard();
-
-      } catch (error) {
-
-        showMessage(
-          "authMessage",
-          error.message,
-          false
-        );
-
-      }
-
-    });
+}
 
 
-  /* =====================================================
-     LOGIN
-  ===================================================== */
+/* =========================
+   AUTH TABS
+========================= */
+
+function showLogin() {
 
   document
     .getElementById("loginForm")
-    .addEventListener("submit", async function(event) {
+    .classList.remove("hidden");
 
-      event.preventDefault();
+  document
+    .getElementById("registerForm")
+    .classList.add("hidden");
 
-      const email =
-        document.getElementById("loginEmail").value.trim();
+  document
+    .getElementById("loginTab")
+    .classList.add("active");
 
-      const password =
-        document.getElementById("loginPassword").value;
+  document
+    .getElementById("registerTab")
+    .classList.remove("active");
 
-      try {
+}
 
-        const data = await api(
-          "/api/login",
-          {
-            method: "POST",
-            headers: apiHeaders(),
-            body: JSON.stringify({
-              email,
-              password
-            })
-          }
-        );
 
-        userToken = data.token;
+function showRegister() {
 
-        localStorage.setItem(
-          "vertexUserToken",
-          userToken
-        );
+  document
+    .getElementById("loginForm")
+    .classList.add("hidden");
 
-        currentUser = data.user;
+  document
+    .getElementById("registerForm")
+    .classList.remove("hidden");
 
-        showDashboard();
+  document
+    .getElementById("loginTab")
+    .classList.remove("active");
 
-      } catch (error) {
+  document
+    .getElementById("registerTab")
+    .classList.add("active");
 
-        showMessage(
-          "authMessage",
-          error.message,
-          false
-        );
+}
 
-      }
 
-    });
+/* =========================
+   REGISTER
+========================= */
 
+document
+  .getElementById("registerForm")
+  .addEventListener("submit", async function(event) {
 
-  /* =====================================================
-     SHOW DASHBOARD
-  ===================================================== */
+    event.preventDefault();
 
-  function showDashboard() {
+    const name =
+      document.getElementById("registerName").value.trim();
 
-    document
-      .getElementById("authScreen")
-      .classList.add("hidden");
-
-    document
-      .getElementById("adminScreen")
-      .classList.add("hidden");
-
-    document
-      .getElementById("dashboardScreen")
-      .classList.remove("hidden");
-
-    updateUserInterface();
-
-    loadTransactions();
-
-    loadTrades();
-
-    loadMarket();
-
-    setTimeout(loadMarket, 1000);
-
-  }
-
-
-  function updateUserInterface() {
-
-    if (!currentUser) return;
-
-    document.getElementById("userName").textContent =
-      currentUser.name;
-
-    document.getElementById("userEmail").textContent =
-      currentUser.email;
-
-    document.getElementById("accountPhone").textContent =
-      currentUser.phone || "---";
-
-    document.getElementById("balance").textContent =
-      formatMoney(currentUser.balance);
-
-    document.getElementById("walletCard").textContent =
-      formatMoney(currentUser.balance);
-
-    if (!document.getElementById("depositPhone").value) {
-      document.getElementById("depositPhone").value =
-        currentUser.phone || "";
-    }
-
-    if (!document.getElementById("withdrawPhone").value) {
-      document.getElementById("withdrawPhone").value =
-        currentUser.phone || "";
-    }
-
-  }
-
-
-  /* =====================================================
-     REFRESH ACCOUNT
-  ===================================================== */
-
-  async function refreshAccount() {
-
-    try {
-
-      const data = await api(
-        "/api/me",
-        {
-          headers: apiHeaders(userToken)
-        }
-      );
-
-      currentUser = data.user;
-
-      updateUserInterface();
-
-      await loadTransactions();
-
-      await loadTrades();
-
-    } catch (error) {
-
-      if (
-        error.message.toLowerCase().includes("log in")
-      ) {
-        logout();
-      }
-
-    }
-
-  }
-
-
-  /* =====================================================
-     LOGOUT
-  ===================================================== */
-
-  async function logout() {
-
-    try {
-
-      await api(
-        "/api/logout",
-        {
-          method: "POST",
-          headers: apiHeaders(userToken)
-        }
-      );
-
-    } catch {}
-
-    localStorage.removeItem("vertexUserToken");
-
-    userToken = "";
-
-    currentUser = null;
-
-    document
-      .getElementById("dashboardScreen")
-      .classList.add("hidden");
-
-    document
-      .getElementById("adminScreen")
-      .classList.add("hidden");
-
-    document
-      .getElementById("authScreen")
-      .classList.remove("hidden");
-
-    showLogin();
-
-  }
-
-
-  /* =====================================================
-     M-PESA DEPOSIT
-  ===================================================== */
-
-  async function depositMoney() {
-
-    const amount =
-      Number(
-        document.getElementById("depositAmount").value
-      );
+    const email =
+      document.getElementById("registerEmail").value.trim();
 
     let phone =
-      document.getElementById("depositPhone").value.trim();
+      document.getElementById("registerPhone").value.trim();
+
+    const password =
+      document.getElementById("registerPassword").value;
+
+    if (phone.startsWith("+254")) {
+      phone = phone.substring(1);
+    }
 
     if (phone.startsWith("0")) {
       phone = "254" + phone.substring(1);
     }
 
-    if (!amount || amount < 1) {
+    if (!name || !email || !phone || !password) {
 
       showMessage(
-        "walletMessage",
-        "Enter a valid deposit amount.",
+        "authMessage",
+        "Please fill in all fields.",
+        false
+      );
+
+      return;
+
+    }
+
+    if (password.length < 6) {
+
+      showMessage(
+        "authMessage",
+        "Password must be at least 6 characters.",
         false
       );
 
@@ -1525,8 +1245,8 @@
     if (!/^254\d{9}$/.test(phone)) {
 
       showMessage(
-        "walletMessage",
-        "Use Kenyan format 2547XXXXXXXX.",
+        "authMessage",
+        "Use a valid Kenyan phone number, for example 0757808087.",
         false
       );
 
@@ -1535,820 +1255,1138 @@
     }
 
     showMessage(
-      "walletMessage",
-      "Starting M-Pesa payment...",
+      "authMessage",
+      "Creating your account...",
       true
     );
 
     try {
 
       const data = await api(
-        "/api/mpesa/deposit",
+        "/api/register",
         {
           method: "POST",
-          headers: apiHeaders(userToken),
+          headers: apiHeaders(),
           body: JSON.stringify({
-            amount,
-            phone
+            name,
+            email,
+            phone,
+            password
           })
         }
       );
 
-      showMessage(
-        "walletMessage",
-        data.message ||
-        "STK Push sent. Complete the payment on your phone.",
-        true
-      );
-
-      document.getElementById("depositAmount").value = "";
-
-      /*
-        The callback from Safaricom updates the balance.
-        Refresh shortly after completing the STK payment.
-      */
-
-      setTimeout(refreshAccount, 5000);
-      setTimeout(refreshAccount, 15000);
-
-    } catch (error) {
-
-      showMessage(
-        "walletMessage",
-        error.message,
-        false
-      );
-
-    }
-
-  }
-
-
-  /* =====================================================
-     WITHDRAWAL
-  ===================================================== */
-
-  async function withdrawMoney() {
-
-    const amount =
-      Number(
-        document.getElementById("withdrawAmount").value
-      );
-
-    let phone =
-      document.getElementById("withdrawPhone").value.trim();
-
-    if (phone.startsWith("0")) {
-      phone = "254" + phone.substring(1);
-    }
-
-    if (!amount || amount <= 0) {
-
-      showMessage(
-        "walletMessage",
-        "Enter a valid withdrawal amount.",
-        false
-      );
-
-      return;
-
-    }
-
-    if (!/^254\d{9}$/.test(phone)) {
-
-      showMessage(
-        "walletMessage",
-        "Use Kenyan format 2547XXXXXXXX.",
-        false
-      );
-
-      return;
-
-    }
-
-    try {
-
-      const data = await api(
-        "/api/withdraw",
-        {
-          method: "POST",
-          headers: apiHeaders(userToken),
-          body: JSON.stringify({
-            amount,
-            phone
-          })
-        }
-      );
-
-      showMessage(
-        "walletMessage",
-        data.message ||
-        "Withdrawal request submitted.",
-        true
-      );
-
-      document.getElementById("withdrawAmount").value = "";
-
-      await refreshAccount();
-
-    } catch (error) {
-
-      showMessage(
-        "walletMessage",
-        error.message,
-        false
-      );
-
-    }
-
-  }
-
-
-  /* =====================================================
-     MARKET
-  ===================================================== */
-
-  async function loadMarket() {
-
-    try {
-
-      const data =
-        await api("/api/market");
-
-      const price =
-        Number(data.price).toFixed(2);
-
-      document.getElementById("marketPrice")
-        .textContent = price;
-
-      document.getElementById("tradePrice")
-        .textContent = price;
-
-    } catch {}
-
-  }
-
-
-  setInterval(loadMarket, 3000);
-
-
-  /* =====================================================
-     TRADE
-  ===================================================== */
-
-  async function trade(side) {
-
-    const amount =
-      Number(
-        document.getElementById("tradeAmount").value
-      );
-
-    if (!amount || amount <= 0) {
-
-      showMessage(
-        "tradeMessage",
-        "Enter a valid trade amount.",
-        false
-      );
-
-      return;
-
-    }
-
-    try {
-
-      const data = await api(
-        "/api/trade",
-        {
-          method: "POST",
-          headers: apiHeaders(userToken),
-          body: JSON.stringify({
-            side,
-            amount
-          })
-        }
-      );
-
-      showMessage(
-        "tradeMessage",
-        data.message ||
-        "Demo trade executed.",
-        true
-      );
-
-      document.getElementById("tradeAmount").value = "";
-
-      await refreshAccount();
-
-    } catch (error) {
-
-      showMessage(
-        "tradeMessage",
-        error.message,
-        false
-      );
-
-    }
-
-  }
-
-
-  /* =====================================================
-     TRANSACTIONS
-  ===================================================== */
-
-  async function loadTransactions() {
-
-    try {
-
-      const data =
-        await api(
-          "/api/transactions",
-          {
-            headers: apiHeaders(userToken)
-          }
+      if (!data.success || !data.token || !data.user) {
+
+        throw new Error(
+          data.message ||
+          "Registration failed."
         );
-
-      const table =
-        document.getElementById("transactionsTable");
-
-      if (!data.transactions.length) {
-
-        table.innerHTML = `
-          <tr>
-            <td colspan="4">
-              No transactions yet.
-            </td>
-          </tr>
-        `;
-
-        return;
 
       }
 
-      table.innerHTML =
-        data.transactions.map(tx => `
-
-          <tr>
-
-            <td>${tx.type}</td>
-
-            <td>
-              KES ${formatMoney(tx.amount)}
-            </td>
-
-            <td>
-              ${badge(tx.status)}
-            </td>
-
-            <td>
-              ${formatDate(tx.createdAt)}
-            </td>
-
-          </tr>
-
-        `).join("");
-
-    } catch (error) {
-
-      console.error(error);
-
-    }
-
-  }
-
-
-  /* =====================================================
-     TRADES
-  ===================================================== */
-
-  async function loadTrades() {
-
-    try {
-
-      const data =
-        await api(
-          "/api/trades",
-          {
-            headers: apiHeaders(userToken)
-          }
-        );
-
-      const table =
-        document.getElementById("tradesTable");
-
-      if (!data.trades.length) {
-
-        table.innerHTML = `
-          <tr>
-            <td colspan="5">
-              No trades yet.
-            </td>
-          </tr>
-        `;
-
-        return;
-
-      }
-
-      table.innerHTML =
-        data.trades.map(trade => `
-
-          <tr>
-
-            <td class="${trade.side === "BUY" ? "green" : "red"}">
-              ${trade.side}
-            </td>
-
-            <td>
-              KES ${formatMoney(trade.amount)}
-            </td>
-
-            <td>
-              ${Number(trade.price).toFixed(2)}
-            </td>
-
-            <td>
-              ${badge(trade.status)}
-            </td>
-
-            <td>
-              ${formatDate(trade.createdAt)}
-            </td>
-
-          </tr>
-
-        `).join("");
-
-    } catch (error) {
-
-      console.error(error);
-
-    }
-
-  }
-
-
-  /* =====================================================
-     ADMIN LOGIN MODAL
-  ===================================================== */
-
-  function showAdminLogin() {
-
-    document
-      .getElementById("adminModal")
-      .classList.remove("hidden");
-
-  }
-
-
-  function closeAdminLogin() {
-
-    document
-      .getElementById("adminModal")
-      .classList.add("hidden");
-
-  }
-
-
-  async function adminLogin() {
-
-    const username =
-      document.getElementById("adminUsername").value.trim();
-
-    const password =
-      document.getElementById("adminPassword").value;
-
-    try {
-
-      const data =
-        await api(
-          "/api/admin/login",
-          {
-            method: "POST",
-            headers: apiHeaders(),
-            body: JSON.stringify({
-              username,
-              password
-            })
-          }
-        );
-
-      adminToken = data.token;
+      userToken = data.token;
 
       localStorage.setItem(
-        "vertexAdminToken",
-        adminToken
+        "vertexUserToken",
+        userToken
       );
-
-      closeAdminLogin();
-
-      document
-        .getElementById("dashboardScreen")
-        .classList.add("hidden");
-
-      document
-        .getElementById("authScreen")
-        .classList.add("hidden");
-
-      document
-        .getElementById("adminScreen")
-        .classList.remove("hidden");
-
-      loadAdminDashboard();
-
-    } catch (error) {
-
-      showMessage(
-        "adminLoginMessage",
-        error.message,
-        false
-      );
-
-    }
-
-  }
-
-
-  /* =====================================================
-     ADMIN DASHBOARD
-  ===================================================== */
-
-  async function loadAdminDashboard() {
-
-    try {
-
-      const data =
-        await api(
-          "/api/admin/dashboard",
-          {
-            headers: apiHeaders(adminToken)
-          }
-        );
-
-      document.getElementById("statUsers")
-        .textContent =
-        data.statistics.users;
-
-      document.getElementById("statDeposits")
-        .textContent =
-        "KES " +
-        formatMoney(
-          data.statistics.totalDeposits
-        );
-
-      document.getElementById("statWithdrawals")
-        .textContent =
-        data.statistics.pendingWithdrawals;
-
-      document.getElementById("statTrades")
-        .textContent =
-        data.statistics.totalTrades;
-
-
-      /* USERS */
-
-      const usersTable =
-        document.getElementById("usersTable");
-
-      if (!data.users.length) {
-
-        usersTable.innerHTML = `
-          <tr>
-            <td colspan="5">
-              No users yet.
-            </td>
-          </tr>
-        `;
-
-      } else {
-
-        usersTable.innerHTML =
-          data.users.map(user => `
-
-            <tr>
-
-              <td>${escapeHtml(user.name)}</td>
-
-              <td>${escapeHtml(user.email)}</td>
-
-              <td>${escapeHtml(user.phone)}</td>
-
-              <td>
-                KES ${formatMoney(user.balance)}
-              </td>
-
-              <td>
-                ${formatDate(user.createdAt)}
-              </td>
-
-            </tr>
-
-          `).join("");
-
-      }
-
-
-      /* WITHDRAWALS */
-
-      const withdrawalTable =
-        document.getElementById(
-          "withdrawalsTable"
-        );
-
-      if (!data.withdrawals.length) {
-
-        withdrawalTable.innerHTML = `
-          <tr>
-            <td colspan="6">
-              No withdrawal requests.
-            </td>
-          </tr>
-        `;
-
-      } else {
-
-        withdrawalTable.innerHTML =
-          data.withdrawals.map(w => `
-
-            <tr>
-
-              <td>
-                ${findUserName(
-                  data.users,
-                  w.userId
-                )}
-              </td>
-
-              <td>
-                ${escapeHtml(w.phone)}
-              </td>
-
-              <td>
-                KES ${formatMoney(w.amount)}
-              </td>
-
-              <td>
-                ${badge(w.status)}
-              </td>
-
-              <td>
-                ${formatDate(w.createdAt)}
-              </td>
-
-              <td>
-
-                ${
-                  w.status === "PENDING"
-
-                  ? `
-
-                    <div class="admin-actions">
-
-                      <button
-                        class="approve"
-                        onclick="approveWithdrawal('${w.id}')"
-                      >
-                        Approve
-                      </button>
-
-                      <button
-                        class="reject"
-                        onclick="rejectWithdrawal('${w.id}')"
-                      >
-                        Reject
-                      </button>
-
-                    </div>
-
-                  `
-
-                  : "Processed"
-
-                }
-
-              </td>
-
-            </tr>
-
-          `).join("");
-
-      }
-
-    } catch (error) {
-
-      showMessage(
-        "adminMessage",
-        error.message,
-        false
-      );
-
-      if (
-        error.message
-          .toLowerCase()
-          .includes("admin")
-      ) {
-
-        adminLogout();
-
-      }
-
-    }
-
-  }
-
-
-  function findUserName(users, userId) {
-
-    const user =
-      users.find(u => u.id === userId);
-
-    return user
-      ? escapeHtml(user.name)
-      : "Unknown";
-
-  }
-
-
-  function escapeHtml(value) {
-
-    return String(value || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-
-  }
-
-
-  /* =====================================================
-     ADMIN APPROVE WITHDRAWAL
-  ===================================================== */
-
-  async function approveWithdrawal(id) {
-
-    if (
-      !confirm(
-        "Approve this withdrawal for payment processing?"
-      )
-    ) {
-      return;
-    }
-
-    try {
-
-      const data =
-        await api(
-          "/api/admin/withdrawals/" +
-          encodeURIComponent(id) +
-          "/approve",
-          {
-            method: "POST",
-            headers: apiHeaders(adminToken)
-          }
-        );
-
-      showMessage(
-        "adminMessage",
-        data.message,
-        true
-      );
-
-      loadAdminDashboard();
-
-    } catch (error) {
-
-      showMessage(
-        "adminMessage",
-        error.message,
-        false
-      );
-
-    }
-
-  }
-
-
-  /* =====================================================
-     ADMIN REJECT WITHDRAWAL
-  ===================================================== */
-
-  async function rejectWithdrawal(id) {
-
-    if (
-      !confirm(
-        "Reject this withdrawal and return the balance to the user?"
-      )
-    ) {
-      return;
-    }
-
-    try {
-
-      const data =
-        await api(
-          "/api/admin/withdrawals/" +
-          encodeURIComponent(id) +
-          "/reject",
-          {
-            method: "POST",
-            headers: apiHeaders(adminToken)
-          }
-        );
-
-      showMessage(
-        "adminMessage",
-        data.message,
-        true
-      );
-
-      loadAdminDashboard();
-
-    } catch (error) {
-
-      showMessage(
-        "adminMessage",
-        error.message,
-        false
-      );
-
-    }
-
-  }
-
-
-  /* =====================================================
-     ADMIN LOGOUT
-  ===================================================== */
-
-  function adminLogout() {
-
-    localStorage.removeItem(
-      "vertexAdminToken"
-    );
-
-    adminToken = "";
-
-    document
-      .getElementById("adminScreen")
-      .classList.add("hidden");
-
-    document
-      .getElementById("authScreen")
-      .classList.remove("hidden");
-
-    showLogin();
-
-  }
-
-
-  /* =====================================================
-     AUTO LOGIN
-  ===================================================== */
-
-  async function initialize() {
-
-    if (!userToken) {
-
-      document
-        .getElementById("authScreen")
-        .classList.remove("hidden");
-
-      return;
-
-    }
-
-    try {
-
-      const data =
-        await api(
-          "/api/me",
-          {
-            headers: apiHeaders(userToken)
-          }
-        );
 
       currentUser = data.user;
 
       showDashboard();
 
-    } catch {
+    } catch (error) {
 
-      localStorage.removeItem(
-        "vertexUserToken"
+      showMessage(
+        "authMessage",
+        error.message,
+        false
       );
 
-      userToken = "";
+    }
+
+  });
+
+
+/* =========================
+   LOGIN
+========================= */
+
+document
+  .getElementById("loginForm")
+  .addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const email =
+      document.getElementById("loginEmail").value.trim();
+
+    const password =
+      document.getElementById("loginPassword").value;
+
+    showMessage(
+      "authMessage",
+      "Logging in...",
+      true
+    );
+
+    try {
+
+      const data = await api(
+        "/api/login",
+        {
+          method: "POST",
+          headers: apiHeaders(),
+          body: JSON.stringify({
+            email,
+            password
+          })
+        }
+      );
+
+      if (!data.success || !data.token || !data.user) {
+
+        throw new Error(
+          data.message ||
+          "Login failed."
+        );
+
+      }
+
+      userToken = data.token;
+
+      localStorage.setItem(
+        "vertexUserToken",
+        userToken
+      );
+
+      currentUser = data.user;
+
+      showDashboard();
+
+    } catch (error) {
+
+      showMessage(
+        "authMessage",
+        error.message,
+        false
+      );
+
+    }
+
+  });
+
+
+/* =========================
+   DASHBOARD
+========================= */
+
+function showDashboard() {
+
+  document
+    .getElementById("authScreen")
+    .classList.add("hidden");
+
+  document
+    .getElementById("adminScreen")
+    .classList.add("hidden");
+
+  document
+    .getElementById("dashboardScreen")
+    .classList.remove("hidden");
+
+  updateUserInterface();
+
+  loadTransactions();
+  loadTrades();
+  loadMarket();
+
+}
+
+
+function updateUserInterface() {
+
+  if (!currentUser) return;
+
+  document.getElementById("userName").textContent =
+    currentUser.name || "";
+
+  document.getElementById("userEmail").textContent =
+    currentUser.email || "";
+
+  document.getElementById("accountPhone").textContent =
+    currentUser.phone || "---";
+
+  document.getElementById("balance").textContent =
+    formatMoney(currentUser.balance);
+
+  document.getElementById("walletCard").textContent =
+    formatMoney(currentUser.balance);
+
+  if (!document.getElementById("depositPhone").value) {
+
+    document.getElementById("depositPhone").value =
+      currentUser.phone || "";
+
+  }
+
+  if (!document.getElementById("withdrawPhone").value) {
+
+    document.getElementById("withdrawPhone").value =
+      currentUser.phone || "";
+
+  }
+
+}
+
+
+/* =========================
+   REFRESH
+========================= */
+
+async function refreshAccount() {
+
+  try {
+
+    const data = await api(
+      "/api/me",
+      {
+        headers: apiHeaders(userToken)
+      }
+    );
+
+    currentUser = data.user;
+
+    updateUserInterface();
+
+    await loadTransactions();
+    await loadTrades();
+
+  } catch (error) {
+
+    if (
+      error.message.toLowerCase().includes("log in") ||
+      error.message.toLowerCase().includes("unauthorized")
+    ) {
+
+      logout();
 
     }
 
   }
 
+}
 
-  initialize();
+
+/* =========================
+   LOGOUT
+========================= */
+
+async function logout() {
+
+  try {
+
+    await api(
+      "/api/logout",
+      {
+        method: "POST",
+        headers: apiHeaders(userToken)
+      }
+    );
+
+  } catch {}
+
+  localStorage.removeItem("vertexUserToken");
+
+  userToken = "";
+  currentUser = null;
+
+  document
+    .getElementById("dashboardScreen")
+    .classList.add("hidden");
+
+  document
+    .getElementById("adminScreen")
+    .classList.add("hidden");
+
+  document
+    .getElementById("authScreen")
+    .classList.remove("hidden");
+
+  showLogin();
+
+}
+
+
+/* =========================
+   M-PESA DEPOSIT
+========================= */
+
+async function depositMoney() {
+
+  const amount =
+    Number(
+      document.getElementById("depositAmount").value
+    );
+
+  let phone =
+    document.getElementById("depositPhone").value.trim();
+
+  if (phone.startsWith("+254")) {
+    phone = phone.substring(1);
+  }
+
+  if (phone.startsWith("0")) {
+    phone = "254" + phone.substring(1);
+  }
+
+  if (!amount || amount < 1) {
+
+    showMessage(
+      "walletMessage",
+      "Enter a valid deposit amount.",
+      false
+    );
+
+    return;
+
+  }
+
+  if (!/^254\d{9}$/.test(phone)) {
+
+    showMessage(
+      "walletMessage",
+      "Use Kenyan format 2547XXXXXXXX.",
+      false
+    );
+
+    return;
+
+  }
+
+  showMessage(
+    "walletMessage",
+    "Starting M-Pesa payment...",
+    true
+  );
+
+  try {
+
+    const data = await api(
+      "/api/mpesa/deposit",
+      {
+        method: "POST",
+        headers: apiHeaders(userToken),
+        body: JSON.stringify({
+          amount,
+          phone
+        })
+      }
+    );
+
+    showMessage(
+      "walletMessage",
+      data.message ||
+      "STK Push sent. Complete the payment on your phone.",
+      true
+    );
+
+    document.getElementById("depositAmount").value = "";
+
+    setTimeout(refreshAccount, 5000);
+    setTimeout(refreshAccount, 15000);
+
+  } catch (error) {
+
+    showMessage(
+      "walletMessage",
+      error.message,
+      false
+    );
+
+  }
+
+}
+
+
+/* =========================
+   WITHDRAW
+========================= */
+
+async function withdrawMoney() {
+
+  const amount =
+    Number(
+      document.getElementById("withdrawAmount").value
+    );
+
+  let phone =
+    document.getElementById("withdrawPhone").value.trim();
+
+  if (phone.startsWith("+254")) {
+    phone = phone.substring(1);
+  }
+
+  if (phone.startsWith("0")) {
+    phone = "254" + phone.substring(1);
+  }
+
+  if (!amount || amount <= 0) {
+
+    showMessage(
+      "walletMessage",
+      "Enter a valid withdrawal amount.",
+      false
+    );
+
+    return;
+
+  }
+
+  if (!/^254\d{9}$/.test(phone)) {
+
+    showMessage(
+      "walletMessage",
+      "Use Kenyan format 2547XXXXXXXX.",
+      false
+    );
+
+    return;
+
+  }
+
+  try {
+
+    const data = await api(
+      "/api/withdraw",
+      {
+        method: "POST",
+        headers: apiHeaders(userToken),
+        body: JSON.stringify({
+          amount,
+          phone
+        })
+      }
+    );
+
+    showMessage(
+      "walletMessage",
+      data.message ||
+      "Withdrawal request submitted.",
+      true
+    );
+
+    document.getElementById("withdrawAmount").value = "";
+
+    await refreshAccount();
+
+  } catch (error) {
+
+    showMessage(
+      "walletMessage",
+      error.message,
+      false
+    );
+
+  }
+
+}
+
+
+/* =========================
+   MARKET
+========================= */
+
+async function loadMarket() {
+
+  try {
+
+    const data =
+      await api("/api/market");
+
+    const price =
+      Number(data.price).toFixed(2);
+
+    document.getElementById("marketPrice")
+      .textContent = price;
+
+    document.getElementById("tradePrice")
+      .textContent = price;
+
+  } catch (error) {
+
+    console.error("Market error:", error);
+
+  }
+
+}
+
+
+setInterval(loadMarket, 3000);
+
+
+/* =========================
+   TRADE
+========================= */
+
+async function trade(side) {
+
+  const amount =
+    Number(
+      document.getElementById("tradeAmount").value
+    );
+
+  if (!amount || amount <= 0) {
+
+    showMessage(
+      "tradeMessage",
+      "Enter a valid trade amount.",
+      false
+    );
+
+    return;
+
+  }
+
+  try {
+
+    const data = await api(
+      "/api/trade",
+      {
+        method: "POST",
+        headers: apiHeaders(userToken),
+        body: JSON.stringify({
+          side,
+          amount
+        })
+      }
+    );
+
+    showMessage(
+      "tradeMessage",
+      data.message ||
+      "Demo trade executed.",
+      true
+    );
+
+    document.getElementById("tradeAmount").value = "";
+
+    await refreshAccount();
+
+  } catch (error) {
+
+    showMessage(
+      "tradeMessage",
+      error.message,
+      false
+    );
+
+  }
+
+}
+
+
+/* =========================
+   TRANSACTIONS
+========================= */
+
+async function loadTransactions() {
+
+  try {
+
+    const data =
+      await api(
+        "/api/transactions",
+        {
+          headers: apiHeaders(userToken)
+        }
+      );
+
+    const table =
+      document.getElementById("transactionsTable");
+
+    const transactions =
+      Array.isArray(data.transactions)
+        ? data.transactions
+        : [];
+
+    if (!transactions.length) {
+
+      table.innerHTML = `
+        <tr>
+          <td colspan="4">
+            No transactions yet.
+          </td>
+        </tr>
+      `;
+
+      return;
+
+    }
+
+    table.innerHTML =
+      transactions.map(tx => `
+
+        <tr>
+
+          <td>${escapeHtml(tx.type)}</td>
+
+          <td>
+            KES ${formatMoney(tx.amount)}
+          </td>
+
+          <td>
+            ${badge(tx.status)}
+          </td>
+
+          <td>
+            ${formatDate(tx.createdAt)}
+          </td>
+
+        </tr>
+
+      `).join("");
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+}
+
+
+/* =========================
+   TRADES
+========================= */
+
+async function loadTrades() {
+
+  try {
+
+    const data =
+      await api(
+        "/api/trades",
+        {
+          headers: apiHeaders(userToken)
+        }
+      );
+
+    const table =
+      document.getElementById("tradesTable");
+
+    const trades =
+      Array.isArray(data.trades)
+        ? data.trades
+        : [];
+
+    if (!trades.length) {
+
+      table.innerHTML = `
+        <tr>
+          <td colspan="5">
+            No trades yet.
+          </td>
+        </tr>
+      `;
+
+      return;
+
+    }
+
+    table.innerHTML =
+      trades.map(trade => `
+
+        <tr>
+
+          <td class="${trade.side === "BUY" ? "green" : "red"}">
+            ${escapeHtml(trade.side)}
+          </td>
+
+          <td>
+            KES ${formatMoney(trade.amount)}
+          </td>
+
+          <td>
+            ${Number(trade.price || 0).toFixed(2)}
+          </td>
+
+          <td>
+            ${badge(trade.status)}
+          </td>
+
+          <td>
+            ${formatDate(trade.createdAt)}
+          </td>
+
+        </tr>
+
+      `).join("");
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+}
+
+
+/* =========================
+   ADMIN
+========================= */
+
+function showAdminLogin() {
+
+  document
+    .getElementById("adminModal")
+    .classList.remove("hidden");
+
+}
+
+
+function closeAdminLogin() {
+
+  document
+    .getElementById("adminModal")
+    .classList.add("hidden");
+
+}
+
+
+async function adminLogin() {
+
+  const username =
+    document.getElementById("adminUsername").value.trim();
+
+  const password =
+    document.getElementById("adminPassword").value;
+
+  try {
+
+    const data =
+      await api(
+        "/api/admin/login",
+        {
+          method: "POST",
+          headers: apiHeaders(),
+          body: JSON.stringify({
+            username,
+            password
+          })
+        }
+      );
+
+    adminToken = data.token;
+
+    localStorage.setItem(
+      "vertexAdminToken",
+      adminToken
+    );
+
+    closeAdminLogin();
+
+    document
+      .getElementById("dashboardScreen")
+      .classList.add("hidden");
+
+    document
+      .getElementById("authScreen")
+      .classList.add("hidden");
+
+    document
+      .getElementById("adminScreen")
+      .classList.remove("hidden");
+
+    loadAdminDashboard();
+
+  } catch (error) {
+
+    showMessage(
+      "adminLoginMessage",
+      error.message,
+      false
+    );
+
+  }
+
+}
+
+
+/* =========================
+   ADMIN DASHBOARD
+========================= */
+
+async function loadAdminDashboard() {
+
+  try {
+
+    const data =
+      await api(
+        "/api/admin/dashboard",
+        {
+          headers: apiHeaders(adminToken)
+        }
+      );
+
+    document.getElementById("statUsers")
+      .textContent =
+      data.statistics.users;
+
+    document.getElementById("statDeposits")
+      .textContent =
+      "KES " +
+      formatMoney(
+        data.statistics.totalDeposits
+      );
+
+    document.getElementById("statWithdrawals")
+      .textContent =
+      data.statistics.pendingWithdrawals;
+
+    document.getElementById("statTrades")
+      .textContent =
+      data.statistics.totalTrades;
+
+
+    const usersTable =
+      document.getElementById("usersTable");
+
+    if (!data.users.length) {
+
+      usersTable.innerHTML = `
+        <tr>
+          <td colspan="5">
+            No users yet.
+          </td>
+        </tr>
+      `;
+
+    } else {
+
+      usersTable.innerHTML =
+        data.users.map(user => `
+
+          <tr>
+
+            <td>${escapeHtml(user.name)}</td>
+
+            <td>${escapeHtml(user.email)}</td>
+
+            <td>${escapeHtml(user.phone)}</td>
+
+            <td>
+              KES ${formatMoney(user.balance)}
+            </td>
+
+            <td>
+              ${formatDate(user.createdAt)}
+            </td>
+
+          </tr>
+
+        `).join("");
+
+    }
+
+
+    const withdrawalTable =
+      document.getElementById("withdrawalsTable");
+
+    if (!data.withdrawals.length) {
+
+      withdrawalTable.innerHTML = `
+        <tr>
+          <td colspan="6">
+            No withdrawal requests.
+          </td>
+        </tr>
+      `;
+
+    } else {
+
+      withdrawalTable.innerHTML =
+        data.withdrawals.map(w => `
+
+          <tr>
+
+            <td>
+              ${findUserName(
+                data.users,
+                w.userId
+              )}
+            </td>
+
+            <td>
+              ${escapeHtml(w.phone)}
+            </td>
+
+            <td>
+              KES ${formatMoney(w.amount)}
+            </td>
+
+            <td>
+              ${badge(w.status)}
+            </td>
+
+            <td>
+              ${formatDate(w.createdAt)}
+            </td>
+
+            <td>
+
+              ${
+                w.status === "PENDING"
+
+                ? `
+
+                  <div class="admin-actions">
+
+                    <button
+                      class="approve"
+                      onclick="approveWithdrawal('${w.id}')"
+                    >
+                      Approve
+                    </button>
+
+                    <button
+                      class="reject"
+                      onclick="rejectWithdrawal('${w.id}')"
+                    >
+                      Reject
+                    </button>
+
+                  </div>
+
+                `
+
+                : "Processed"
+
+              }
+
+            </td>
+
+          </tr>
+
+        `).join("");
+
+    }
+
+  } catch (error) {
+
+    showMessage(
+      "adminMessage",
+      error.message,
+      false
+    );
+
+    if (
+      error.message
+        .toLowerCase()
+        .includes("admin")
+    ) {
+
+      adminLogout();
+
+    }
+
+  }
+
+}
+
+
+function findUserName(users, userId) {
+
+  const user =
+    users.find(u => u.id === userId);
+
+  return user
+    ? escapeHtml(user.name)
+    : "Unknown";
+
+}
+
+
+function escapeHtml(value) {
+
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+/* =========================
+   APPROVE
+========================= */
+
+async function approveWithdrawal(id) {
+
+  if (
+    !confirm(
+      "Approve this withdrawal for payment processing?"
+    )
+  ) {
+    return;
+  }
+
+  try {
+
+    const data =
+      await api(
+        "/api/admin/withdrawals/" +
+        encodeURIComponent(id) +
+        "/approve",
+        {
+          method: "POST",
+          headers: apiHeaders(adminToken)
+        }
+      );
+
+    showMessage(
+      "adminMessage",
+      data.message,
+      true
+    );
+
+    loadAdminDashboard();
+
+  } catch (error) {
+
+    showMessage(
+      "adminMessage",
+      error.message,
+      false
+    );
+
+  }
+
+}
+
+
+/* =========================
+   REJECT
+========================= */
+
+async function rejectWithdrawal(id) {
+
+  if (
+    !confirm(
+      "Reject this withdrawal and return the balance to the user?"
+    )
+  ) {
+    return;
+  }
+
+  try {
+
+    const data =
+      await api(
+        "/api/admin/withdrawals/" +
+        encodeURIComponent(id) +
+        "/reject",
+        {
+          method: "POST",
+          headers: apiHeaders(adminToken)
+        }
+      );
+
+    showMessage(
+      "adminMessage",
+      data.message,
+      true
+    );
+
+    loadAdminDashboard();
+
+  } catch (error) {
+
+    showMessage(
+      "adminMessage",
+      error.message,
+      false
+    );
+
+  }
+
+}
+
+
+/* =========================
+   ADMIN LOGOUT
+========================= */
+
+function adminLogout() {
+
+  localStorage.removeItem(
+    "vertexAdminToken"
+  );
+
+  adminToken = "";
+
+  document
+    .getElementById("adminScreen")
+    .classList.add("hidden");
+
+  document
+    .getElementById("authScreen")
+    .classList.remove("hidden");
+
+  showLogin();
+
+}
+
+
+/* =========================
+   AUTO LOGIN
+========================= */
+
+async function initialize() {
+
+  if (!userToken) {
+
+    document
+      .getElementById("authScreen")
+      .classList.remove("hidden");
+
+    return;
+
+  }
+
+  try {
+
+    const data =
+      await api(
+        "/api/me",
+        {
+          headers: apiHeaders(userToken)
+        }
+      );
+
+    currentUser = data.user;
+
+    showDashboard();
+
+  } catch (error) {
+
+    localStorage.removeItem(
+      "vertexUserToken"
+    );
+
+    userToken = "";
+
+  }
+
+}
+
+
+initialize();
 
 </script>
 
 </body>
-         </html>
+</html>

@@ -1,62 +1,991 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VertexFX</title>
+
 <style>
-*{box-sizing:border-box}html,body{margin:0;padding:0}
-body{font-family:Arial,Helvetica,sans-serif;background:#07111f;color:#eef5ff;line-height:1.4}
-button,input,select{font:inherit}
-.top{height:64px;background:#091522;border-bottom:1px solid #1a2d42;display:flex;align-items:center;padding:0 16px;gap:10px;position:sticky;top:0;z-index:5}
-.logo{display:flex;align-items:center;gap:8px;font-size:20px;font-weight:800}.v{width:32px;height:32px;border-radius:9px;background:#1688e8;display:grid;place-items:center}.fx{color:#55b9ff}
-.badge{font-size:10px;background:#102940;color:#62c1ff;border:1px solid #245072;border-radius:20px;padding:5px 8px;font-weight:bold}
-.account{margin-left:auto;background:#102033;color:#fff;border:1px solid #294058;border-radius:8px;padding:8px 10px}
-.wrap{max-width:1100px;margin:auto;padding:18px 14px 30px}
-.nav{display:flex;gap:7px;overflow:auto;padding:2px 0 15px}.nav button{white-space:nowrap;border:1px solid #1d334a;background:#0c1b2b;color:#9eb3c7;border-radius:8px;padding:8px 11px}.nav .on{background:#123453;color:#fff}
-.hero{display:flex;justify-content:space-between;gap:14px;align-items:center;margin:5px 0 20px}.eyebrow{font-size:10px;color:#55b9ff;font-weight:bold;letter-spacing:1.5px}.hero h1{font-size:29px;line-height:1.1;margin:5px 0}.hero h1 span{color:#55b9ff}.muted{color:#8197ab;font-size:13px}.primary{background:#1688e8;border:0;color:white;border-radius:9px;padding:11px 15px;font-weight:bold;white-space:nowrap}
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.card,.panel{background:#0b1928;border:1px solid #1a3046;border-radius:12px}.card{padding:14px}.card small{color:#8298ac;display:block;font-size:11px}.card strong{display:block;font-size:19px;margin-top:5px}.card em{font-style:normal;color:#5d7489;font-size:10px}
-.grid{display:grid;grid-template-columns:1.65fr 1fr;gap:12px}.panel{padding:14px;margin-bottom:12px}.head{display:flex;justify-content:space-between;align-items:center}.head h2{font-size:16px;margin:0}.head p{font-size:11px;color:#71889d;margin:3px 0 0}.price{font-size:19px;font-weight:bold}
-.chart{margin-top:12px;height:250px;overflow:hidden}.chart svg{width:100%;height:215px;color:#55b9ff}.axis{display:flex;justify-content:space-between;color:#587086;font-size:10px}
-label{display:block;color:#91a7ba;font-size:11px;margin:12px 0 0}input,select{width:100%;margin-top:5px;padding:10px;border-radius:7px;border:1px solid #274058;background:#071522;color:#fff;outline:none}.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}.actions button{border:0;color:white;padding:11px;border-radius:8px;font-weight:bold}.sell{background:#d64d62}.buy{background:#1688e8}.msg{font-size:11px;color:#688096;min-height:20px}
-.rows{margin-top:10px}.row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:11px 3px;border-top:1px solid #172c40;font-size:12px}.th{color:#6e8599;font-size:10px}.up{color:#52c48b}.down{color:#ec7180}
-footer{text-align:center;color:#516a80;font-size:10px;padding:10px 0 20px}
-@media(max-width:760px){.wrap{padding:14px 10px 25px}.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.hero{align-items:flex-start}.hero h1{font-size:25px}.primary{margin-top:4px}.chart{height:220px}.chart svg{height:185px}}
-@media(max-width:430px){.top{padding:0 11px}.logo{font-size:18px}.badge{font-size:9px}.account{font-size:11px}.hero{display:block}.primary{width:100%;margin-top:12px}.cards{gap:7px}.card{padding:11px}.card strong{font-size:17px}.two{grid-template-columns:1fr}.row{grid-template-columns:1.5fr 1fr 1fr 1fr;font-size:11px}}
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#07111f;
+  color:#f4f7fb;
+}
+
+button,input,select{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.top{
+  height:64px;
+  background:#091522;
+  border-bottom:1px solid #20364d;
+  display:flex;
+  align-items:center;
+  padding:0 18px;
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font-size:21px;
+  font-weight:700;
+}
+
+.logo .v{
+  width:34px;
+  height:34px;
+  border-radius:9px;
+  background:#1687e8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.fx{
+  color:#58b7ff;
+}
+
+.badge{
+  margin-left:10px;
+  font-size:10px;
+  background:#102940;
+  color:#62c1ff;
+  border:1px solid #24577c;
+  padding:6px 9px;
+  border-radius:15px;
+}
+
+.account{
+  margin-left:auto;
+  background:#102033;
+  color:white;
+  border:1px solid #29415a;
+  border-radius:9px;
+  padding:10px 14px;
+}
+
+.wrap{
+  max-width:1100px;
+  margin:auto;
+  padding:18px 14px 30px;
+}
+
+.nav{
+  display:flex;
+  gap:7px;
+  overflow:auto;
+  padding:2px 0 15px;
+}
+
+.nav button{
+  background:#102033;
+  color:#9eb3c8;
+  border:1px solid #233c55;
+  border-radius:9px;
+  padding:11px 15px;
+  white-space:nowrap;
+}
+
+.nav button.active,
+.nav button:hover{
+  background:#16395b;
+  color:white;
+}
+
+.hero{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:center;
+}
+
+.hero h1{
+  margin:5px 0;
+  font-size:30px;
+}
+
+.hero .blue{
+  color:#42aefb;
+}
+
+.muted{
+  color:#8fa5ba;
+}
+
+.primary{
+  background:#1687e8;
+  color:white;
+  border:0;
+  border-radius:10px;
+  padding:13px 20px;
+  font-weight:700;
+}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-top:18px;
+}
+
+.card,.panel{
+  background:#0b1b2b;
+  border:1px solid #1e354b;
+  border-radius:15px;
+  padding:18px;
+}
+
+.card small{
+  display:block;
+  color:#8499ad;
+}
+
+.card strong{
+  display:block;
+  font-size:24px;
+  margin-top:12px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1.65fr 1fr;
+  gap:12px;
+  margin-top:12px;
+}
+
+.chart{
+  margin-top:12px;
+  height:250px;
+  overflow:hidden;
+  border-radius:10px;
+  background:#081725;
+}
+
+.chart svg{
+  width:100%;
+  height:100%;
+}
+
+label{
+  display:block;
+  color:#91a7ba;
+  font-size:13px;
+  margin:12px 0 6px;
+}
+
+input,select{
+  width:100%;
+  background:#081725;
+  color:white;
+  border:1px solid #2a465f;
+  border-radius:8px;
+  padding:12px;
+  outline:none;
+}
+
+input:focus,select:focus{
+  border-color:#1687e8;
+}
+
+.two{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  margin-top:15px;
+}
+
+.sell,.buy{
+  flex:1;
+  border:0;
+  border-radius:8px;
+  padding:12px;
+  color:white;
+  font-weight:bold;
+}
+
+.sell{background:#c44752}
+.buy{background:#1687e8}
+
+.rows{
+  margin-top:10px;
+}
+
+.row{
+  display:grid;
+  grid-template-columns:1.5fr 1fr 1fr;
+  gap:8px;
+  padding:11px 0;
+  border-bottom:1px solid #1b3044;
+}
+
+footer{
+  text-align:center;
+  color:#516a80;
+  font-size:10px;
+  padding:25px;
+}
+
+/* LOGIN */
+.auth-page{
+  min-height:calc(100vh - 64px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:25px 15px;
+}
+
+.auth-box{
+  width:100%;
+  max-width:430px;
+  background:#0b1b2b;
+  border:1px solid #29445c;
+  border-radius:18px;
+  padding:25px;
+  box-shadow:0 15px 40px rgba(0,0,0,.3);
+}
+
+.auth-logo{
+  text-align:center;
+  font-size:25px;
+  font-weight:bold;
+  margin-bottom:8px;
+}
+
+.auth-title{
+  text-align:center;
+  margin:20px 0 5px;
+  font-size:25px;
+}
+
+.auth-subtitle{
+  text-align:center;
+  color:#8fa5ba;
+  margin-bottom:20px;
+}
+
+.auth-button{
+  width:100%;
+  margin-top:18px;
+  padding:13px;
+  border:0;
+  border-radius:9px;
+  background:#1687e8;
+  color:white;
+  font-weight:bold;
+}
+
+.switch{
+  text-align:center;
+  margin-top:18px;
+  color:#8fa5ba;
+}
+
+.switch button{
+  background:none;
+  border:0;
+  color:#42aefb;
+  font-weight:bold;
+}
+
+.message{
+  margin-top:12px;
+  padding:10px;
+  border-radius:8px;
+  background:#102940;
+  color:#9ed5ff;
+  display:none;
+}
+
+.profile-box{
+  background:#0b1b2b;
+  border:1px solid #1e354b;
+  border-radius:15px;
+  padding:20px;
+  margin-top:15px;
+}
+
+.hidden{
+  display:none !important;
+}
+
+@media(max-width:760px){
+  .cards{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+  .hero{
+    align-items:flex-start;
+  }
+
+  .hero h1{
+    font-size:25px;
+  }
+}
+
+@media(max-width:430px){
+  .cards{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .top{
+    padding:0 10px;
+  }
+
+  .logo{
+    font-size:17px;
+  }
+
+  .wrap{
+    padding:14px 10px 25px;
+  }
+}
 </style>
 </head>
+
 <body>
-<header class="top"><div class="logo"><span class="v">V</span>Vertex<span class="fx">FX</span></div><span class="badge">DEMO MODE</span><button class="account">Account ▾</button></header>
-<main class="wrap">
-<nav class="nav"><button class="on">Dashboard</button><button>Trade</button><button>Markets</button><button>Positions</button><button>Transactions</button><button>Deposit</button><button>Withdraw</button><button>KYC</button></nav>
-<section class="hero"><div><div class="eyebrow">WELCOME TO VERTEXFX</div><h1>Trade smarter. <span>Stay in control.</span></h1><div class="muted">A modern broker-connected trading platform.</div></div><button class="primary" onclick="document.getElementById('trade').scrollIntoView({behavior:'smooth'})">Open Trade</button></section>
-<section class="cards">
-<div class="card"><small>Account Balance</small><strong>$10,000.00</strong><em>Demo account</em></div>
-<div class="card"><small>Equity</small><strong>$10,000.00</strong><em>+0.00%</em></div>
-<div class="card"><small>Free Margin</small><strong>$10,000.00</strong><em>Available</em></div>
-<div class="card"><small>Open Positions</small><strong id="pos">0</strong><em>Active trades</em></div>
+
+<header class="top">
+  <div class="logo">
+    <span class="v">V</span>
+    <span>Vertex <span class="fx">FX</span></span>
+    <span class="badge">DEMO MODE</span>
+  </div>
+
+  <button class="account" onclick="showProfile()" id="accountButton">
+    Account ▾
+  </button>
+</header>
+
+<!-- LOGIN / REGISTER -->
+<section id="authPage" class="auth-page">
+
+  <div class="auth-box">
+
+    <div class="auth-logo">
+      <span style="color:#1687e8">Vertex</span>
+      <span style="color:#58b7ff">FX</span>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginBox">
+
+      <h2 class="auth-title">Customer Login</h2>
+      <p class="auth-subtitle">Sign in to your trading account</p>
+
+      <label>Email address</label>
+      <input id="loginEmail" type="email" placeholder="Enter your email">
+
+      <label>Password</label>
+      <input id="loginPassword" type="password" placeholder="Enter your password">
+
+      <button class="auth-button" onclick="login()">
+        Login
+      </button>
+
+      <div id="loginMessage" class="message"></div>
+
+      <div class="switch">
+        Don't have an account?
+        <button onclick="showRegister()">Create account</button>
+      </div>
+
+    </div>
+
+    <!-- REGISTER -->
+    <div id="registerBox" class="hidden">
+
+      <h2 class="auth-title">Create Account</h2>
+      <p class="auth-subtitle">Register as a VertexFX customer</p>
+
+      <label>Full name</label>
+      <input id="registerName" type="text" placeholder="Enter your full name">
+
+      <label>Email address</label>
+      <input id="registerEmail" type="email" placeholder="Enter your email">
+
+      <label>Phone number</label>
+      <input id="registerPhone" type="tel" placeholder="Enter your phone number">
+
+      <label>Password</label>
+      <input id="registerPassword" type="password" placeholder="Create a password">
+
+      <label>Confirm password</label>
+      <input id="registerConfirm" type="password" placeholder="Confirm password">
+
+      <button class="auth-button" onclick="register()">
+        Create Account
+      </button>
+
+      <div id="registerMessage" class="message"></div>
+
+      <div class="switch">
+        Already registered?
+        <button onclick="showLogin()">Login</button>
+      </div>
+
+    </div>
+
+  </div>
+
 </section>
-<section class="grid">
-<div class="panel"><div class="head"><div><h2>EUR/USD</h2><p>Market chart interface</p></div><span class="price" id="price">1.16842</span></div>
-<div class="chart"><svg viewBox="0 0 900 330" preserveAspectRatio="none"><path d="M0 250 L55 225 L95 245 L145 185 L200 205 L255 150 L310 170 L365 115 L420 145 L475 105 L530 130 L585 80 L640 105 L700 65 L755 100 L810 55 L900 75 L900 330 L0 330 Z" fill="currentColor" opacity=".08"/><path d="M0 250 L55 225 L95 245 L145 185 L200 205 L255 150 L310 170 L365 115 L420 145 L475 105 L530 130 L585 80 L640 105 L700 65 L755 100 L810 55 L900 75" fill="none" stroke="currentColor" stroke-width="5"/></svg><div class="axis"><span>09:00</span><span>11:00</span><span>13:00</span><span>15:00</span><span>17:00</span></div></div></div>
-<div class="panel" id="trade"><div class="head"><div><h2>Market Order</h2><p>Demo execution only</p></div></div>
-<label>Instrument<select><option>EUR/USD</option><option>GBP/USD</option><option>USD/JPY</option><option>USD/CAD</option></select></label>
-<label>Volume (lots)<input id="vol" type="number" value="0.10" min="0.01" step="0.01"></label>
-<div class="two"><label>Take Profit<input placeholder="Optional"></label><label>Stop Loss<input placeholder="Optional"></label></div>
-<div class="actions"><button class="sell" onclick="order('SELL')">SELL</button><button class="buy" onclick="order('BUY')">BUY</button></div><p class="msg" id="msg">Orders here are simulated.</p></div>
-</section>
-<section class="panel"><div class="head"><div><h2>Market Watch</h2><p>Sample prices for this prototype.</p></div></div><div class="rows">
-<div class="row th"><span>Instrument</span><span>Bid</span><span>Ask</span><span>Change</span></div>
-<div class="row"><span>EUR/USD</span><span>1.16840</span><span>1.16842</span><span class="up">+0.18%</span></div>
-<div class="row"><span>GBP/USD</span><span>1.35310</span><span>1.35316</span><span class="up">+0.22%</span></div>
-<div class="row"><span>USD/JPY</span><span>147.220</span><span>147.235</span><span class="down">-0.11%</span></div>
-<div class="row"><span>USD/CAD</span><span>1.37520</span><span>1.37528</span><span class="up">+0.06%</span></div>
-</div></section>
-<footer>VertexFX prototype • Real-money trading requires an appropriate licensed broker/regulatory arrangement. No guaranteed returns.</footer>
+
+
+<!-- MAIN DASHBOARD -->
+<main id="dashboardPage" class="wrap hidden">
+
+  <nav class="nav">
+    <button class="active">Dashboard</button>
+    <button onclick="scrollToTrade()">Trade</button>
+    <button>Markets</button>
+    <button>Positions</button>
+    <button>Transactions</button>
+    <button onclick="deposit()">Deposit</button>
+  </nav>
+
+  <section class="hero">
+
+    <div>
+      <div class="muted" style="font-size:12px;letter-spacing:1px">
+        WELCOME TO VERTEXFX
+      </div>
+
+      <h1>
+        Trade smarter.
+        <span class="blue">Stay in control.</span>
+      </h1>
+
+      <div class="muted">
+        A modern broker-connected trading platform.
+      </div>
+    </div>
+
+    <button class="primary" onclick="scrollToTrade()">
+      Open Trade
+    </button>
+
+  </section>
+
+
+  <section class="cards">
+
+    <div class="card">
+      <small>Account Balance</small>
+      <strong>$10,000.00</strong>
+      <small style="margin-top:7px">Demo account</small>
+    </div>
+
+    <div class="card">
+      <small>Equity</small>
+      <strong>$10,000.00</strong>
+      <small style="margin-top:7px">+0.00%</small>
+    </div>
+
+    <div class="card">
+      <small>Free Margin</small>
+      <strong>$10,000.00</strong>
+      <small style="margin-top:7px">Available</small>
+    </div>
+
+    <div class="card">
+      <small>Open Positions</small>
+      <strong id="positions">0</strong>
+      <small style="margin-top:7px">Active trades</small>
+    </div>
+
+  </section>
+
+
+  <section class="grid">
+
+    <div class="panel">
+
+      <div class="hero">
+        <div>
+          <h2 style="margin:0">EUR/USD</h2>
+          <div class="muted">Market chart interface</div>
+        </div>
+
+        <strong style="font-size:25px">1.16834</strong>
+      </div>
+
+      <div class="chart">
+
+        <svg viewBox="0 0 900 330" preserveAspectRatio="none">
+
+          <polyline
+            points="0,260 55,240 110,255 165,205 220,225 275,175 330,195 385,140 440,165 495,125 550,155 605,105 660,135 715,90 770,120 825,75 900,95"
+            fill="none"
+            stroke="#49aef5"
+            stroke-width="5"
+          />
+
+          <polygon
+            points="0,260 55,240 110,255 165,205 220,225 275,175 330,195 385,140 440,165 495,125 550,155 605,105 660,135 715,90 770,120 825,75 900,95 900,330 0,330"
+            fill="#0e293d"
+          />
+
+        </svg>
+
+      </div>
+
+      <div class="muted" style="display:flex;justify-content:space-between">
+        <span>09:00</span>
+        <span>11:00</span>
+        <span>13:00</span>
+        <span>15:00</span>
+        <span>17:00</span>
+      </div>
+
+    </div>
+
+
+    <div class="panel" id="trade">
+
+      <h2 style="margin-top:0">Market Order</h2>
+
+      <div class="muted">
+        Demo execution only
+      </div>
+
+      <label>Instrument</label>
+
+      <select>
+        <option>EUR/USD</option>
+        <option>GBP/USD</option>
+        <option>USD/JPY</option>
+        <option>USD/CAD</option>
+        <option>XAU/USD</option>
+      </select>
+
+      <label>Volume (lots)</label>
+
+      <input id="volume" type="number" value="0.10" min="0.01" step="0.01">
+
+      <div class="two">
+
+        <div>
+          <label>Take Profit</label>
+          <input placeholder="Optional">
+        </div>
+
+        <div>
+          <label>Stop Loss</label>
+          <input placeholder="Optional">
+        </div>
+
+      </div>
+
+      <div class="actions">
+        <button class="sell" onclick="demoOrder('SELL')">
+          SELL
+        </button>
+
+        <button class="buy" onclick="demoOrder('BUY')">
+          BUY
+        </button>
+      </div>
+
+      <p id="orderMessage" class="muted">
+        Orders here are demo only.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <section class="panel" style="margin-top:12px">
+
+    <div class="hero">
+      <div>
+        <h2 style="margin:0">Market Watch</h2>
+        <div class="muted">Live market interface</div>
+      </div>
+    </div>
+
+    <div class="row" style="font-weight:bold">
+      <span>Instrument</span>
+      <span>Bid</span>
+      <span>Change</span>
+    </div>
+
+    <div class="row">
+      <span>EUR/USD</span>
+      <span>1.16842</span>
+      <span style="color:#58c1ff">+0.09%</span>
+    </div>
+
+    <div class="row">
+      <span>GBP/USD</span>
+      <span>1.35310</span>
+      <span style="color:#58c1ff">+0.12%</span>
+    </div>
+
+    <div class="row">
+      <span>USD/JPY</span>
+      <span>147.220</span>
+      <span style="color:#e56a73">-0.04%</span>
+    </div>
+
+    <div class="row">
+      <span>USD/CAD</span>
+      <span>1.37520</span>
+      <span style="color:#58c1ff">+0.05%</span>
+    </div>
+
+  </section>
+
+
+  <section id="profileBox" class="profile-box hidden">
+
+    <h2>Customer Account</h2>
+
+    <p>
+      <span class="muted">Name:</span>
+      <strong id="profileName"></strong>
+    </p>
+
+    <p>
+      <span class="muted">Email:</span>
+      <strong id="profileEmail"></strong>
+    </p>
+
+    <p>
+      <span class="muted">Phone:</span>
+      <strong id="profilePhone"></strong>
+    </p>
+
+    <button class="sell" style="width:100%" onclick="logout()">
+      Logout
+    </button>
+
+  </section>
+
+
+  <footer>
+    VertexFX prototype • Real-money trading requires an appropriate licensed broker and secure backend.
+  </footer>
+
 </main>
+
+
 <script>
-let p=0;function order(side){let v=Number(document.getElementById('vol').value);if(v<=0)return;document.getElementById('pos').textContent=++p;document.getElementById('msg').textContent='Demo '+side+' order placed — '+v.toFixed(2)+' lots.'}
-setInterval(()=>document.getElementById('price').textContent=(1.16842+(Math.random()-.5)*.00018).toFixed(5),1800);
+
+let currentUser = null;
+
+
+/* SHOW LOGIN */
+function showLogin(){
+
+  document.getElementById("loginBox").classList.remove("hidden");
+  document.getElementById("registerBox").classList.add("hidden");
+
+}
+
+
+/* SHOW REGISTER */
+function showRegister(){
+
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("registerBox").classList.remove("hidden");
+
+}
+
+
+/* REGISTER CUSTOMER */
+function register(){
+
+  const name =
+    document.getElementById("registerName").value.trim();
+
+  const email =
+    document.getElementById("registerEmail").value.trim().toLowerCase();
+
+  const phone =
+    document.getElementById("registerPhone").value.trim();
+
+  const password =
+    document.getElementById("registerPassword").value;
+
+  const confirm =
+    document.getElementById("registerConfirm").value;
+
+  const message =
+    document.getElementById("registerMessage");
+
+
+  if(!name || !email || !phone || !password){
+
+    message.style.display="block";
+    message.textContent="Please fill in all fields.";
+    return;
+
+  }
+
+
+  if(password.length < 6){
+
+    message.style.display="block";
+    message.textContent="Password must contain at least 6 characters.";
+    return;
+
+  }
+
+
+  if(password !== confirm){
+
+    message.style.display="block";
+    message.textContent="Passwords do not match.";
+    return;
+
+  }
+
+
+  const existing =
+    localStorage.getItem("vertexfx_user_" + email);
+
+
+  if(existing){
+
+    message.style.display="block";
+    message.textContent="An account with this email already exists.";
+    return;
+
+  }
+
+
+  const user = {
+    name:name,
+    email:email,
+    phone:phone,
+    password:password
+  };
+
+
+  localStorage.setItem(
+    "vertexfx_user_" + email,
+    JSON.stringify(user)
+  );
+
+
+  message.style.display="block";
+  message.textContent="Account created successfully. You can now login.";
+
+
+  setTimeout(function(){
+    showLogin();
+
+    document.getElementById("loginEmail").value=email;
+
+  },1000);
+
+}
+
+
+/* LOGIN CUSTOMER */
+function login(){
+
+  const email =
+    document.getElementById("loginEmail").value.trim().toLowerCase();
+
+  const password =
+    document.getElementById("loginPassword").value;
+
+  const message =
+    document.getElementById("loginMessage");
+
+
+  const saved =
+    localStorage.getItem("vertexfx_user_" + email);
+
+
+  if(!saved){
+
+    message.style.display="block";
+    message.textContent="Account not found. Please register first.";
+    return;
+
+  }
+
+
+  const user =
+    JSON.parse(saved);
+
+
+  if(user.password !== password){
+
+    message.style.display="block";
+    message.textContent="Incorrect password.";
+    return;
+
+  }
+
+
+  currentUser=user;
+
+  localStorage.setItem(
+    "vertexfx_current_user",
+    JSON.stringify(user)
+  );
+
+
+  openDashboard();
+
+}
+
+
+/* OPEN DASHBOARD */
+function openDashboard(){
+
+  document.getElementById("authPage").classList.add("hidden");
+
+  document.getElementById("dashboardPage").classList.remove("hidden");
+
+  document.getElementById("accountButton").textContent =
+    currentUser.name + " ▾";
+
+}
+
+
+/* PROFILE */
+function showProfile(){
+
+  if(!currentUser){
+
+    document.getElementById("authPage").classList.remove("hidden");
+
+    document.getElementById("dashboardPage").classList.add("hidden");
+
+    showLogin();
+
+    return;
+
+  }
+
+
+  const box =
+    document.getElementById("profileBox");
+
+  box.classList.toggle("hidden");
+
+
+  document.getElementById("profileName").textContent =
+    currentUser.name;
+
+  document.getElementById("profileEmail").textContent =
+    currentUser.email;
+
+  document.getElementById("profilePhone").textContent =
+    currentUser.phone;
+
+}
+
+
+/* LOGOUT */
+function logout(){
+
+  currentUser=null;
+
+  localStorage.removeItem("vertexfx_current_user");
+
+  document.getElementById("dashboardPage").classList.add("hidden");
+
+  document.getElementById("profileBox").classList.add("hidden");
+
+  document.getElementById("authPage").classList.remove("hidden");
+
+  document.getElementById("accountButton").textContent =
+    "Account ▾";
+
+  showLogin();
+
+}
+
+
+/* DEMO ORDER */
+function demoOrder(type){
+
+  const volume =
+    document.getElementById("volume").value;
+
+  document.getElementById("orderMessage").textContent =
+    type + " order of " + volume +
+    " lots submitted in DEMO MODE.";
+
+  let positions =
+    Number(document.getElementById("positions").textContent);
+
+  positions++;
+
+  document.getElementById("positions").textContent =
+    positions;
+
+}
+
+
+/* TRADE */
+function scrollToTrade(){
+
+  document.getElementById("trade").scrollIntoView({
+    behavior:"smooth"
+  });
+
+}
+
+
+/* DEPOSIT */
+function deposit(){
+
+  alert(
+    "DEMO MODE: Real deposits are not connected yet."
+  );
+
+}
+
+
+/* RESTORE LOGIN SESSION */
+window.onload=function(){
+
+  const saved =
+    localStorage.getItem("vertexfx_current_user");
+
+
+  if(saved){
+
+    currentUser=JSON.parse(saved);
+
+    openDashboard();
+
+  }else{
+
+    document.getElementById("authPage").classList.remove("hidden");
+
+    document.getElementById("dashboardPage").classList.add("hidden");
+
+  }
+
+};
+
 </script>
+
 </body>
 </html>

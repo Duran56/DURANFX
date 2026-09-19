@@ -1,1477 +1,612 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+const express = require("express");
+const axios = require("axios");
+const cors = require("cors");
+require("dotenv").config();
 
-<title>Vertex FX Admin</title>
+const app = express();
 
-<style>
-*{
-box-sizing:border-box;
-}
+app.use(cors());
+app.use(express.json());
 
-body{
-margin:0;
-font-family:Arial,sans-serif;
-background:#06111d;
-color:white;
-}
+const PORT = process.env.PORT || 3000;
 
-header{
-background:#0b1928;
-border-bottom:1px solid #20384d;
-padding:16px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-}
+/*
+  DURANFX / VERTEX FX
+  M-PESA DARaja backend
 
-.logo{
-font-size:24px;
-font-weight:bold;
-}
+  IMPORTANT:
+  Put your Daraja credentials in .env.
+  NEVER put them inside index.html.
+*/
 
-.logo span{
-color:#55b9ff;
-}
+let transactions = [];
 
-.admin{
-font-size:12px;
-color:#9bb1c4;
-}
 
-.container{
-max-width:1200px;
-margin:auto;
-padding:15px;
-}
+/* =========================
+   HEALTH CHECK
+========================= */
 
-nav{
-display:flex;
-gap:8px;
-overflow:auto;
-margin-bottom:18px;
-}
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    service: "Vertex FX payment backend",
+    status: "online"
+  });
+});
 
-nav button{
-background:#0b1928;
-color:#a8bbca;
-border:1px solid #21384d;
-padding:11px 15px;
-border-radius:8px;
-white-space:nowrap;
-}
 
-nav button.active{
-background:#1688e8;
-color:white;
-}
+/* =========================
+   GET DARAJA ACCESS TOKEN
+========================= */
 
-.cards{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:10px;
-}
+async function getAccessToken() {
 
-.card{
-background:#0b1928;
-border:1px solid #1d354a;
-border-radius:12px;
-padding:16px;
-}
+  const credentials =
+    Buffer.from(
+      process.env.MPESA_CONSUMER_KEY +
+      ":" +
+      process.env.MPESA_CONSUMER_SECRET
+    ).toString("base64");
 
-.card small{
-color:#8398aa;
-}
+  const response = await axios.get(
+    "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+    {
+      headers: {
+        Authorization: "Basic " + credentials
+      }
+    }
+  );
 
-.card strong{
-display:block;
-font-size:22px;
-margin-top:8px;
-}
-
-.panel{
-background:#0b1928;
-border:1px solid #1d354a;
-border-radius:12px;
-padding:16px;
-margin-top:14px;
-}
-
-h2{
-font-size:18px;
-margin-top:0;
-}
-
-input,select{
-width:100%;
-padding:12px;
-margin-top:6px;
-background:#071522;
-border:1px solid #294158;
-border-radius:7px;
-color:white;
-}
-
-label{
-display:block;
-color:#9db0c0;
-font-size:12px;
-margin-top:12px;
-}
-
-button{
-cursor:pointer;
-}
-
-.primary{
-background:#1688e8;
-border:0;
-color:white;
-padding:12px 16px;
-border-radius:8px;
-font-weight:bold;
-}
-
-.success{
-background:#168f5b;
-border:0;
-color:white;
-padding:10px 14px;
-border-radius:7px;
-}
-
-.danger{
-background:#b94458;
-border:0;
-color:white;
-padding:10px 14px;
-border-radius:7px;
-}
-
-.secondary{
-background:#13283a;
-border:1px solid #29445d;
-color:white;
-padding:10px 14px;
-border-radius:7px;
-}
-
-.table{
-width:100%;
-overflow:auto;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-min-width:700px;
-}
-
-th,td{
-padding:12px;
-border-bottom:1px solid #1a3043;
-text-align:left;
-font-size:13px;
-}
-
-th{
-color:#7890a3;
-font-size:11px;
-}
-
-.status{
-padding:5px 8px;
-border-radius:15px;
-font-size:10px;
-background:#172f42;
-}
-
-.actions{
-display:flex;
-gap:6px;
-flex-wrap:wrap;
-}
-
-.modal{
-display:none;
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.75);
-align-items:center;
-justify-content:center;
-padding:15px;
-z-index:100;
-}
-
-.modalBox{
-width:100%;
-max-width:450px;
-background:#0b1928;
-border:1px solid #29455d;
-border-radius:14px;
-padding:20px;
-}
-
-.close{
-float:right;
-background:none;
-border:0;
-color:#aaa;
-font-size:24px;
-}
-
-.notice{
-background:#0a1c2c;
-border:1px solid #24445e;
-border-radius:8px;
-padding:12px;
-font-size:12px;
-color:#a9bfce;
-margin-top:12px;
-line-height:1.5;
-}
-
-@media(max-width:750px){
-
-.cards{
-grid-template-columns:1fr 1fr;
-}
-
-header{
-align-items:flex-start;
-}
-
-}
-</style>
-</head>
-
-<body>
-
-<header>
-
-<div class="logo">
-Vertex <span>FX</span>
-</div>
-
-<div class="admin">
-ADMIN CONTROL PANEL
-</div>
-
-</header>
-
-<div class="container">
-
-<nav>
-
-<button class="active" onclick="showPage('dashboard',this)">
-Dashboard
-</button>
-
-<button onclick="showPage('users',this)">
-Users
-</button>
-
-<button onclick="showPage('deposits',this)">
-Deposits
-</button>
-
-<button onclick="showPage('withdrawals',this)">
-Withdrawals
-</button>
-
-<button onclick="showPage('transactions',this)">
-Transactions
-</button>
-
-<button onclick="showPage('settings',this)">
-Settings
-</button>
-
-</nav>
-
-
-<!-- DASHBOARD -->
-
-<section id="dashboard">
-
-<div class="cards">
-
-<div class="card">
-
-<small>Total Users</small>
-
-<strong id="totalUsers">
-0
-</strong>
-
-</div>
-
-<div class="card">
-
-<small>Total Deposits</small>
-
-<strong id="totalDeposits">
-$0.00
-</strong>
-
-</div>
-
-<div class="card">
-
-<small>Total Withdrawals</small>
-
-<strong id="totalWithdrawals">
-$0.00
-</strong>
-
-</div>
-
-<div class="card">
-
-<small>Platform Balance</small>
-
-<strong id="platformBalance">
-$0.00
-</strong>
-
-</div>
-
-</div>
-
-
-<div class="panel">
-
-<h2>
-Account Management
-</h2>
-
-<div class="notice">
-
-This control panel manages the internal account ledger.
-A real M-Pesa payment must be confirmed by the payment provider
-before funds are credited.
-
-</div>
-
-</div>
-
-</section>
-
-
-<!-- USERS -->
-
-<section id="users" style="display:none">
-
-<div class="panel">
-
-<h2>
-Users
-</h2>
-
-<div class="actions">
-
-<button class="primary" onclick="addUser()">
-Add User
-</button>
-
-</div>
-
-<br>
-
-<div class="table">
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Name</th>
-<th>Email</th>
-<th>Balance</th>
-<th>Status</th>
-<th>Action</th>
-
-</tr>
-
-</thead>
-
-<tbody id="usersTable">
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-</section>
-
-
-<!-- DEPOSITS -->
-
-<section id="deposits" style="display:none">
-
-<div class="panel">
-
-<h2>
-Deposit Management
-</h2>
-
-<div class="table">
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>User</th>
-<th>Amount</th>
-<th>Method</th>
-<th>Status</th>
-<th>Action</th>
-
-</tr>
-
-</thead>
-
-<tbody id="depositsTable">
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-</section>
-
-
-<!-- WITHDRAWALS -->
-
-<section id="withdrawals" style="display:none">
-
-<div class="panel">
-
-<h2>
-Withdrawal Management
-</h2>
-
-<div class="table">
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>User</th>
-<th>Amount</th>
-<th>Method</th>
-<th>Status</th>
-<th>Action</th>
-
-</tr>
-
-</thead>
-
-<tbody id="withdrawalsTable">
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-</section>
-
-
-<!-- TRANSACTIONS -->
-
-<section id="transactions" style="display:none">
-
-<div class="panel">
-
-<h2>
-All Transactions
-</h2>
-
-<div class="table">
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Date</th>
-<th>User</th>
-<th>Type</th>
-<th>Amount</th>
-<th>Status</th>
-
-</tr>
-
-</thead>
-
-<tbody id="transactionsTable">
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-</section>
-
-
-<!-- SETTINGS -->
-
-<section id="settings" style="display:none">
-
-<div class="panel">
-
-<h2>
-Platform Settings
-</h2>
-
-<label>
-Platform Name
-
-<input
-id="platformName"
-value="Vertex FX"
->
-</label>
-
-<label>
-Default Currency
-
-<select id="currency">
-
-<option>USD</option>
-<option>KES</option>
-<option>EUR</option>
-<option>GBP</option>
-
-</select>
-
-</label>
-
-<br>
-
-<button class="primary" onclick="saveSettings()">
-Save Settings
-</button>
-
-<div class="notice">
-
-Do not place M-Pesa Consumer Secret,
-Passkey, passwords or private API credentials
-inside this HTML file.
-
-Those credentials belong on the secure backend.
-
-</div>
-
-</div>
-
-</section>
-
-</div>
-
-
-<!-- USER MODAL -->
-
-<div class="modal" id="userModal">
-
-<div class="modalBox">
-
-<button class="close" onclick="closeModal('userModal')">
-×
-</button>
-
-<h2>
-Add User
-</h2>
-
-<label>
-Full Name
-
-<input id="userName">
-</label>
-
-<label>
-Email
-
-<input id="userEmail" type="email">
-</label>
-
-<label>
-Starting Balance
-
-<input id="userBalance" type="number" value="0">
-</label>
-
-<br>
-
-<button class="primary" onclick="saveUser()">
-Create User
-</button>
-
-</div>
-
-</div>
-
-
-<!-- BALANCE MODAL -->
-
-<div class="modal" id="balanceModal">
-
-<div class="modalBox">
-
-<button class="close" onclick="closeModal('balanceModal')">
-×
-</button>
-
-<h2>
-Manage User Balance
-</h2>
-
-<input type="hidden" id="selectedUser">
-
-<label>
-Action
-
-<select id="balanceAction">
-
-<option value="deposit">
-Add Balance
-</option>
-
-<option value="withdraw">
-Remove Balance
-</option>
-
-</select>
-
-</label>
-
-<label>
-Amount
-
-<input id="balanceAmount" type="number">
-</label>
-
-<br>
-
-<button class="primary" onclick="changeBalance()">
-Apply
-</button>
-
-</div>
-
-</div>
-
-
-<script>
-
-let users = JSON.parse(
-localStorage.getItem("vertex_users") || "[]"
-);
-
-let deposits = JSON.parse(
-localStorage.getItem("vertex_deposits") || "[]"
-);
-
-let withdrawals = JSON.parse(
-localStorage.getItem("vertex_withdrawals") || "[]"
-);
-
-let transactions = JSON.parse(
-localStorage.getItem("vertex_transactions") || "[]"
-);
-
-
-function saveData(){
-
-localStorage.setItem(
-"vertex_users",
-JSON.stringify(users)
-);
-
-localStorage.setItem(
-"vertex_deposits",
-JSON.stringify(deposits)
-);
-
-localStorage.setItem(
-"vertex_withdrawals",
-JSON.stringify(withdrawals)
-);
-
-localStorage.setItem(
-"vertex_transactions",
-JSON.stringify(transactions)
-);
-
+  return response.data.access_token;
 }
 
 
-function money(amount){
+/* =========================
+   M-PESA STK PUSH
+========================= */
 
-return "$" +
-Number(amount).toLocaleString(
-undefined,
-{
-minimumFractionDigits:2,
-maximumFractionDigits:2
-}
-);
+app.post("/api/mpesa/deposit", async (req, res) => {
 
-}
+  try {
 
+    const {
+      phone,
+      amount,
+      userId
+    } = req.body;
 
-function showPage(page,button){
+    if (!phone || !amount || !userId) {
 
-document.querySelectorAll(
-".container > section"
-).forEach(
-section => section.style.display="none"
-);
+      return res.status(400).json({
+        success: false,
+        message: "Phone, amount and userId are required."
+      });
 
-document.getElementById(page)
-.style.display="block";
+    }
 
-document.querySelectorAll(
-"nav button"
-).forEach(
-b => b.classList.remove("active")
-);
+    const token = await getAccessToken();
 
-button.classList.add("active");
+    const timestamp =
+      new Date()
+        .toISOString()
+        .replace(/[-T:.Z]/g, "")
+        .substring(0, 14);
 
-render();
+    const password =
+      Buffer.from(
+        process.env.MPESA_SHORTCODE +
+        process.env.MPESA_PASSKEY +
+        timestamp
+      ).toString("base64");
 
-}
+    const payload = {
 
+      BusinessShortCode:
+        process.env.MPESA_SHORTCODE,
 
-function addUser(){
+      Password:
+        password,
 
-document.getElementById("userModal")
-.style.display="flex";
+      Timestamp:
+        timestamp,
 
-}
+      TransactionType:
+        "CustomerPayBillOnline",
 
+      Amount:
+        Number(amount),
 
-function saveUser(){
+      PartyA:
+        phone,
 
-let name =
-document.getElementById("userName").value.trim();
+      PartyB:
+        process.env.MPESA_SHORTCODE,
 
-let email =
-document.getElementById("userEmail").value.trim();
+      PhoneNumber:
+        phone,
 
-let balance =
-Number(
-document.getElementById("userBalance").value
-);
+      CallBackURL:
+        process.env.MPESA_CALLBACK_URL,
 
-if(!name || !email){
+      AccountReference:
+        "VERTEXFX",
 
-alert("Enter the user's name and email.");
+      TransactionDesc:
+        "Vertex FX Deposit"
 
-return;
+    };
 
-}
+    const response = await axios.post(
 
-let user={
+      "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
 
-id:Date.now(),
+      payload,
 
-name:name,
+      {
+        headers: {
+          Authorization:
+            "Bearer " + token,
 
-email:email,
+          "Content-Type":
+            "application/json"
+        }
+      }
 
-balance:balance,
+    );
 
-status:"Active"
+    transactions.push({
 
-};
+      userId: userId,
 
-users.push(user);
+      type: "DEPOSIT",
 
-if(balance>0){
+      amount: Number(amount),
 
-transactions.push({
+      phone: phone,
 
-date:new Date().toLocaleString(),
+      status: "PENDING",
 
-user:name,
+      checkoutRequestID:
+        response.data.CheckoutRequestID,
 
-type:"Initial Balance",
+      createdAt:
+        new Date().toISOString()
 
-amount:balance,
+    });
 
-status:"COMPLETED"
+    res.json({
+
+      success: true,
+
+      message:
+        "M-Pesa payment request sent to the customer's phone.",
+
+      checkoutRequestID:
+        response.data.CheckoutRequestID
+
+    });
+
+  }
+
+  catch(error) {
+
+    console.error(
+      "M-Pesa deposit error:",
+      error.response?.data ||
+      error.message
+    );
+
+    res.status(500).json({
+
+      success: false,
+
+      message:
+        "Unable to start M-Pesa payment."
+
+    });
+
+  }
 
 });
 
-}
 
-saveData();
+/* =========================
+   M-PESA CALLBACK
+========================= */
 
-closeModal("userModal");
+app.post("/api/mpesa/callback", (req, res) => {
 
-document.getElementById("userName").value="";
+  console.log(
+    "M-Pesa callback:",
+    JSON.stringify(req.body, null, 2)
+  );
 
-document.getElementById("userEmail").value="";
+  const callback =
+    req.body?.Body?.stkCallback;
 
-document.getElementById("userBalance").value="0";
+  if (!callback) {
 
-render();
+    return res.json({
+      ResultCode: 0,
+      ResultDesc: "Accepted"
+    });
 
-}
+  }
 
+  const checkoutRequestID =
+    callback.CheckoutRequestID;
 
-function manageBalance(id){
+  const transaction =
+    transactions.find(
+      item =>
+        item.checkoutRequestID ===
+        checkoutRequestID
+    );
 
-document.getElementById("selectedUser")
-.value=id;
+  if (transaction) {
 
-document.getElementById("balanceAmount")
-.value="";
+    if (callback.ResultCode === 0) {
 
-document.getElementById("balanceModal")
-.style.display="flex";
+      transaction.status =
+        "COMPLETED";
 
-}
+      transaction.mpesaReceipt =
+        callback.CallbackMetadata?.Item
+          ?.find(
+            item =>
+              item.Name ===
+              "MpesaReceiptNumber"
+          )?.Value;
 
+    }
 
-function changeBalance(){
+    else {
 
-let id=
-Number(
-document.getElementById("selectedUser").value
-);
+      transaction.status =
+        "FAILED";
 
-let action=
-document.getElementById("balanceAction").value;
+      transaction.failureReason =
+        callback.ResultDesc;
 
-let amount=
-Number(
-document.getElementById("balanceAmount").value
-);
+    }
 
-if(!amount || amount<=0){
+  }
 
-alert("Enter a valid amount.");
+  res.json({
 
-return;
+    ResultCode: 0,
 
-}
+    ResultDesc: "Accepted"
 
-let user=
-users.find(u=>u.id===id);
-
-if(!user){
-
-return;
-
-}
-
-if(action==="deposit"){
-
-user.balance += amount;
-
-transactions.push({
-
-date:new Date().toLocaleString(),
-
-user:user.name,
-
-type:"Admin Deposit",
-
-amount:amount,
-
-status:"COMPLETED"
+  });
 
 });
 
-}
 
-if(action==="withdraw"){
+/* =========================
+   TRANSACTION STATUS
+========================= */
 
-if(amount>user.balance){
+app.get(
+  "/api/transactions/:userId",
+  (req, res) => {
 
-alert("Insufficient user balance.");
+    const userTransactions =
+      transactions.filter(
+        item =>
+          String(item.userId) ===
+          String(req.params.userId)
+      );
 
-return;
+    res.json({
 
-}
+      success: true,
 
-user.balance -= amount;
+      transactions:
+        userTransactions
 
-transactions.push({
+    });
 
-date:new Date().toLocaleString(),
+  }
+);
 
-user:user.name,
 
-type:"Admin Withdrawal",
+/* =========================
+   WITHDRAWAL REQUEST
+========================= */
 
-amount:amount,
+app.post("/api/mpesa/withdraw", async (req, res) => {
 
-status:"COMPLETED"
+  try {
+
+    const {
+      phone,
+      amount,
+      userId
+    } = req.body;
+
+    if (!phone || !amount || !userId) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        message:
+          "Phone, amount and userId are required."
+
+      });
+
+    }
+
+    /*
+      A withdrawal is first recorded as PENDING.
+
+      Do not automatically send money until:
+      - the user's balance has been checked
+      - the withdrawal is authorized
+      - your M-Pesa B2C setup is approved
+    */
+
+    const withdrawal = {
+
+      id:
+        Date.now(),
+
+      userId:
+        userId,
+
+      phone:
+        phone,
+
+      amount:
+        Number(amount),
+
+      type:
+        "WITHDRAWAL",
+
+      status:
+        "PENDING",
+
+      createdAt:
+        new Date().toISOString()
+
+    };
+
+    transactions.push(
+      withdrawal
+    );
+
+    res.json({
+
+      success: true,
+
+      message:
+        "Withdrawal request received.",
+
+      withdrawalId:
+        withdrawal.id
+
+    });
+
+  }
+
+  catch(error) {
+
+    console.error(error);
+
+    res.status(500).json({
+
+      success: false,
+
+      message:
+        "Withdrawal request failed."
+
+    });
+
+  }
 
 });
 
-}
 
-saveData();
+/* =========================
+   START SERVER
+========================= */
 
-closeModal("balanceModal");
+app.listen(
+  PORT,
+  () => {
 
-render();
+    console.log(
+      `Vertex FX backend running on port ${PORT}`
+    );
 
-}
+  }
+);async function deposit(){
 
+    const amount =
+        Number(prompt("Enter M-Pesa deposit amount:"));
 
-function approveDeposit(id){
+    if(!amount || amount <= 0){
 
-let deposit=
-deposits.find(d=>d.id===id);
+        alert("Enter a valid amount.");
 
-if(!deposit){
+        return;
 
-return;
+    }
 
-}
+    const phone =
+        prompt(
+            "Enter the M-Pesa phone number:"
+        );
 
-let user=
-users.find(u=>u.id===deposit.userId);
+    if(!phone){
 
-if(!user){
+        alert("M-Pesa number is required.");
 
-alert("User not found.");
+        return;
 
-return;
+    }
 
-}
+    const userId =
+        localStorage.getItem("vertex_user_id");
 
-if(deposit.status!=="PENDING"){
+    if(!userId){
 
-return;
+        alert(
+            "Please log in before making a deposit."
+        );
 
-}
+        return;
 
-user.balance += deposit.amount;
+    }
 
-deposit.status="COMPLETED";
+    try{
 
-transactions.push({
+        const response =
+            await fetch(
+                "https://YOUR-BACKEND-DOMAIN.com/api/mpesa/deposit",
+                {
 
-date:new Date().toLocaleString(),
+                    method:"POST",
 
-user:user.name,
+                    headers:{
+                        "Content-Type":
+                            "application/json"
+                    },
 
-type:"Deposit",
+                    body:JSON.stringify({
 
-amount:deposit.amount,
+                        phone:phone,
 
-status:"COMPLETED"
+                        amount:amount,
 
-});
+                        userId:userId
 
-saveData();
+                    })
 
-render();
+                }
+            );
 
-}
+        const data =
+            await response.json();
 
+        if(data.success){
 
-function rejectDeposit(id){
+            alert(
+                "M-Pesa payment request sent. Check your phone and enter your M-Pesa PIN."
+            );
 
-let deposit=
-deposits.find(d=>d.id===id);
+        }else{
 
-if(!deposit){
+            alert(
+                data.message ||
+                "Payment could not be started."
+            );
 
-return;
+        }
 
-}
+    }catch(error){
 
-deposit.status="REJECTED";
+        console.error(error);
 
-saveData();
+        alert(
+            "Unable to connect to the payment server."
+        );
+async function withdraw(){
 
-render();
+    const amount =
+        Number(
+            prompt(
+                "Enter withdrawal amount:"
+            )
+        );
 
-}
+    if(!amount || amount <= 0){
 
+        alert(
+            "Enter a valid amount."
+        );
 
-function approveWithdrawal(id){
+        return;
 
-let withdrawal=
-withdrawals.find(w=>w.id===id);
+    }
 
-if(!withdrawal){
+    const phone =
+        prompt(
+            "Enter the M-Pesa number for withdrawal:"
+        );
 
-return;
+    if(!phone){
 
-}
+        alert(
+            "M-Pesa number is required."
+        );
 
-let user=
-users.find(u=>u.id===withdrawal.userId);
+        return;
 
-if(!user){
+    }
 
-return;
+    const userId =
+        localStorage.getItem(
+            "vertex_user_id"
+        );
 
-}
+    if(!userId){
 
-if(withdrawal.status!=="PENDING"){
+        alert(
+            "Please log in first."
+        );
 
-return;
+        return;
 
-}
+    }
 
-if(withdrawal.amount>user.balance){
+    try{
 
-alert("User does not have enough balance.");
+        const response =
+            await fetch(
+                "https://YOUR-BACKEND-DOMAIN.com/api/mpesa/withdraw",
+                {
 
-return;
+                    method:"POST",
 
-}
+                    headers:{
+                        "Content-Type":
+                            "application/json"
+                    },
 
-user.balance -= withdrawal.amount;
+                    body:JSON.stringify({
 
-withdrawal.status="COMPLETED";
+                        phone:phone,
 
-transactions.push({
+                        amount:amount,
 
-date:new Date().toLocaleString(),
+                        userId:userId
 
-user:user.name,
+                    })
 
-type:"Withdrawal",
+                }
+            );
 
-amount:withdrawal.amount,
+        const data =
+            await response.json();
 
-status:"COMPLETED"
+        alert(
+            data.message ||
+            "Withdrawal request received."
+        );
 
-});
+    }catch(error){
 
-saveData();
+        console.error(error);
 
-render();
+        alert(
+            "Unable to connect to the withdrawal server."
+        );
 
-}
-
-
-function rejectWithdrawal(id){
-
-let withdrawal=
-withdrawals.find(w=>w.id===id);
-
-if(!withdrawal){
-
-return;
-
-}
-
-withdrawal.status="REJECTED";
-
-saveData();
-
-render();
-
-}
-
-
-function renderUsers(){
-
-let table=
-document.getElementById("usersTable");
-
-if(!users.length){
-
-table.innerHTML=
-`
-<tr>
-<td colspan="5">
-No users yet.
-</td>
-</tr>
-`;
-
-return;
-
-}
-
-table.innerHTML=
-users.map(user=>`
-
-<tr>
-
-<td>
-${user.name}
-</td>
-
-<td>
-${user.email}
-</td>
-
-<td>
-${money(user.balance)}
-</td>
-
-<td>
-<span class="status">
-${user.status}
-</span>
-</td>
-
-<td>
-
-<button
-class="secondary"
-onclick="manageBalance(${user.id})"
->
-Manage Balance
-</button>
-
-</td>
-
-</tr>
-
-`).join("");
+    }
 
 }
-
-
-function renderDeposits(){
-
-let table=
-document.getElementById("depositsTable");
-
-if(!deposits.length){
-
-table.innerHTML=
-`
-<tr>
-<td colspan="5">
-No deposits.
-</td>
-</tr>
-`;
-
-return;
+    }
 
 }
-
-table.innerHTML=
-deposits.map(d=>{
-
-let user=
-users.find(u=>u.id===d.userId);
-
-return `
-
-<tr>
-
-<td>
-${user ? user.name : "Unknown"}
-</td>
-
-<td>
-${money(d.amount)}
-</td>
-
-<td>
-${d.method}
-</td>
-
-<td>
-<span class="status">
-${d.status}
-</span>
-</td>
-
-<td>
-
-${
-d.status==="PENDING"
-
-?
-
-`
-
-<button
-class="success"
-onclick="approveDeposit(${d.id})"
->
-Approve
-</button>
-
-<button
-class="danger"
-onclick="rejectDeposit(${d.id})"
->
-Reject
-</button>
-
-`
-
-:
-
-"-"
-
-}
-
-</td>
-
-</tr>
-
-`;
-
-}).join("");
-
-}
-
-
-function renderWithdrawals(){
-
-let table=
-document.getElementById("withdrawalsTable");
-
-if(!withdrawals.length){
-
-table.innerHTML=
-`
-<tr>
-<td colspan="5">
-No withdrawals.
-</td>
-</tr>
-`;
-
-return;
-
-}
-
-table.innerHTML=
-withdrawals.map(w=>{
-
-let user=
-users.find(u=>u.id===w.userId);
-
-return `
-
-<tr>
-
-<td>
-${user ? user.name : "Unknown"}
-</td>
-
-<td>
-${money(w.amount)}
-</td>
-
-<td>
-${w.method}
-</td>
-
-<td>
-<span class="status">
-${w.status}
-</span>
-</td>
-
-<td>
-
-${
-w.status==="PENDING"
-
-?
-
-`
-
-<button
-class="success"
-onclick="approveWithdrawal(${w.id})"
->
-Approve
-</button>
-
-<button
-class="danger"
-onclick="rejectWithdrawal(${w.id})"
->
-Reject
-</button>
-
-`
-
-:
-
-"-"
-
-}
-
-</td>
-
-</tr>
-
-`;
-
-}).join("");
-
-}
-
-
-function renderTransactions(){
-
-let table=
-document.getElementById("transactionsTable");
-
-if(!transactions.length){
-
-table.innerHTML=
-`
-<tr>
-<td colspan="5">
-No transactions.
-</td>
-</tr>
-`;
-
-return;
-
-}
-
-table.innerHTML=
-transactions.map(t=>`
-
-<tr>
-
-<td>
-${t.date}
-</td>
-
-<td>
-${t.user}
-</td>
-
-<td>
-${t.type}
-</td>
-
-<td>
-${money(t.amount)}
-</td>
-
-<td>
-${t.status}
-</td>
-
-</tr>
-
-`).join("");
-
-}
-
-
-function renderDashboard(){
-
-document.getElementById("totalUsers")
-.textContent=users.length;
-
-let depositsTotal=
-deposits
-.filter(d=>d.status==="COMPLETED")
-.reduce(
-(sum,d)=>sum+d.amount,
-0
-);
-
-let withdrawalsTotal=
-withdrawals
-.filter(w=>w.status==="COMPLETED")
-.reduce(
-(sum,w)=>sum+w.amount,
-0
-);
-
-let balanceTotal=
-users.reduce(
-(sum,u)=>sum+u.balance,
-0
-);
-
-document.getElementById("totalDeposits")
-.textContent=money(depositsTotal);
-
-document.getElementById("totalWithdrawals")
-.textContent=money(withdrawalsTotal);
-
-document.getElementById("platformBalance")
-.textContent=money(balanceTotal);
-
-}
-
-
-function render(){
-
-renderDashboard();
-
-renderUsers();
-
-renderDeposits();
-
-renderWithdrawals();
-
-renderTransactions();
-
-}
-
-
-function closeModal(id){
-
-document.getElementById(id)
-.style.display="none";
-
-}
-
-
-function saveSettings(){
-
-let name=
-document.getElementById("platformName")
-.value;
-
-localStorage.setItem(
-"vertex_platform_name",
-name
-);
-
-alert("Settings saved.");
-
-}
-
-
-render();
-
-</script>
-
-</body>
-  </html>

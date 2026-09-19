@@ -1,792 +1,1477 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Vertex FX</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Vertex FX Admin</title>
 
 <style>
-*{box-sizing:border-box}
+*{
+box-sizing:border-box;
+}
+
 body{
-  margin:0;
-  background:#06111d;
-  color:#fff;
-  font-family:Arial,sans-serif
+margin:0;
+font-family:Arial,sans-serif;
+background:#06111d;
+color:white;
 }
-.wrap{
-  max-width:1100px;
-  margin:auto;
-  padding:14px
+
+header{
+background:#0b1928;
+border-bottom:1px solid #20384d;
+padding:16px;
+display:flex;
+justify-content:space-between;
+align-items:center;
 }
-.top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:8px 0 16px
+
+.logo{
+font-size:24px;
+font-weight:bold;
 }
-.brand{
-  font-size:24px;
-  font-weight:800
+
+.logo span{
+color:#55b9ff;
 }
-.brand span{color:#55b9ff}
-.badge{
-  font-size:10px;
-  border:1px solid #29455d;
-  padding:6px 9px;
-  border-radius:20px;
-  color:#9fb5c8
+
+.admin{
+font-size:12px;
+color:#9bb1c4;
 }
+
+.container{
+max-width:1200px;
+margin:auto;
+padding:15px;
+}
+
 nav{
-  display:flex;
-  gap:6px;
-  overflow:auto;
-  margin-bottom:16px
+display:flex;
+gap:8px;
+overflow:auto;
+margin-bottom:18px;
 }
+
 nav button{
-  white-space:nowrap;
-  background:#0b1928;
-  color:#a1b5c6;
-  border:1px solid #1b3044;
-  border-radius:8px;
-  padding:10px 13px
+background:#0b1928;
+color:#a8bbca;
+border:1px solid #21384d;
+padding:11px 15px;
+border-radius:8px;
+white-space:nowrap;
 }
+
 nav button.active{
-  background:#123553;
-  color:#fff
+background:#1688e8;
+color:white;
 }
-.hero{
-  display:flex;
-  justify-content:space-between;
-  gap:15px;
-  align-items:center;
-  margin-bottom:16px
-}
-h1{
-  font-size:27px;
-  margin:5px 0
-}
-.muted{
-  color:#8298ab;
-  font-size:13px
-}
-.primary{
-  background:#1688e8;
-  color:#fff;
-  border:0;
-  border-radius:8px;
-  padding:11px 15px;
-  font-weight:700
-}
+
 .cards{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:9px
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
 }
-.card,.panel{
-  background:#0b1928;
-  border:1px solid #1a3045;
-  border-radius:12px
-}
+
 .card{
-  padding:14px
+background:#0b1928;
+border:1px solid #1d354a;
+border-radius:12px;
+padding:16px;
 }
-.card small{color:#8398aa}
+
+.card small{
+color:#8398aa;
+}
+
 .card strong{
-  display:block;
-  font-size:19px;
-  margin-top:7px
+display:block;
+font-size:22px;
+margin-top:8px;
 }
-.grid{
-  display:grid;
-  grid-template-columns:1.55fr 1fr;
-  gap:12px;
-  margin-top:12px
-}
+
 .panel{
-  padding:14px;
-  margin-bottom:12px
+background:#0b1928;
+border:1px solid #1d354a;
+border-radius:12px;
+padding:16px;
+margin-top:14px;
 }
-.head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center
+
+h2{
+font-size:18px;
+margin-top:0;
 }
-.head h2{
-  font-size:16px;
-  margin:0
-}
-.price{
-  font-size:19px;
-  font-weight:bold
-}
-.chart{
-  height:220px;
-  margin-top:10px
-}
-.chart svg{
-  width:100%;
-  height:195px
-}
-.axis{
-  display:flex;
-  justify-content:space-between;
-  color:#5e7589;
-  font-size:10px
-}
-label{
-  display:block;
-  color:#91a7ba;
-  font-size:11px;
-  margin-top:12px
-}
+
 input,select{
-  width:100%;
-  margin-top:5px;
-  padding:11px;
-  background:#071522;
-  color:#fff;
-  border:1px solid #294158;
-  border-radius:7px
+width:100%;
+padding:12px;
+margin-top:6px;
+background:#071522;
+border:1px solid #294158;
+border-radius:7px;
+color:white;
 }
+
+label{
+display:block;
+color:#9db0c0;
+font-size:12px;
+margin-top:12px;
+}
+
+button{
+cursor:pointer;
+}
+
+.primary{
+background:#1688e8;
+border:0;
+color:white;
+padding:12px 16px;
+border-radius:8px;
+font-weight:bold;
+}
+
+.success{
+background:#168f5b;
+border:0;
+color:white;
+padding:10px 14px;
+border-radius:7px;
+}
+
+.danger{
+background:#b94458;
+border:0;
+color:white;
+padding:10px 14px;
+border-radius:7px;
+}
+
+.secondary{
+background:#13283a;
+border:1px solid #29445d;
+color:white;
+padding:10px 14px;
+border-radius:7px;
+}
+
+.table{
+width:100%;
+overflow:auto;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+min-width:700px;
+}
+
+th,td{
+padding:12px;
+border-bottom:1px solid #1a3043;
+text-align:left;
+font-size:13px;
+}
+
+th{
+color:#7890a3;
+font-size:11px;
+}
+
+.status{
+padding:5px 8px;
+border-radius:15px;
+font-size:10px;
+background:#172f42;
+}
+
 .actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin-top:15px
+display:flex;
+gap:6px;
+flex-wrap:wrap;
 }
-.actions button{
-  padding:11px;
-  border:0;
-  border-radius:8px;
-  color:#fff;
-  font-weight:bold
-}
-.sell{background:#b94458}
-.buy{background:#1688e8}
-.notice{
-  background:#0a1c2c;
-  border:1px solid #24445e;
-  border-radius:9px;
-  padding:11px;
-  color:#a9bfce;
-  font-size:11px;
-  line-height:1.5;
-  margin-top:10px
-}
-.row{
-  display:grid;
-  grid-template-columns:1.5fr 1fr 1fr 1fr;
-  padding:11px 2px;
-  border-top:1px solid #172c40;
-  font-size:12px
-}
-.th{
-  color:#70869a;
-  font-size:10px
-}
+
 .modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:#000b;
-  align-items:center;
-  justify-content:center;
-  padding:16px
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.75);
+align-items:center;
+justify-content:center;
+padding:15px;
+z-index:100;
 }
-.box{
-  background:#0b1928;
-  border:1px solid #29455d;
-  border-radius:14px;
-  padding:18px;
-  max-width:430px;
-  width:100%
+
+.modalBox{
+width:100%;
+max-width:450px;
+background:#0b1928;
+border:1px solid #29455d;
+border-radius:14px;
+padding:20px;
 }
+
 .close{
-  float:right;
-  background:none;
-  border:0;
-  color:#9eb3c7;
-  font-size:20px
+float:right;
+background:none;
+border:0;
+color:#aaa;
+font-size:24px;
 }
-@media(max-width:760px){
-  .cards{grid-template-columns:1fr 1fr}
-  .grid{grid-template-columns:1fr}
-  .hero{align-items:flex-start}
-  h1{font-size:23px}
+
+.notice{
+background:#0a1c2c;
+border:1px solid #24445e;
+border-radius:8px;
+padding:12px;
+font-size:12px;
+color:#a9bfce;
+margin-top:12px;
+line-height:1.5;
+}
+
+@media(max-width:750px){
+
+.cards{
+grid-template-columns:1fr 1fr;
+}
+
+header{
+align-items:flex-start;
+}
+
 }
 </style>
 </head>
 
 <body>
 
-<div class="wrap">
+<header>
 
-<header class="top">
-  <div class="brand">Vertex <span>FX</span></div>
-  <div class="badge">CLIENT PORTAL</div>
+<div class="logo">
+Vertex <span>FX</span>
+</div>
+
+<div class="admin">
+ADMIN CONTROL PANEL
+</div>
+
 </header>
 
+<div class="container">
+
 <nav>
-  <button class="active">Dashboard</button>
-  <button>Trade</button>
-  <button>Markets</button>
-  <button>Positions</button>
-  <button>Transactions</button>
-  <button onclick="deposit()">Deposit</button>
-  <button onclick="withdraw()">Withdraw</button>
+
+<button class="active" onclick="showPage('dashboard',this)">
+Dashboard
+</button>
+
+<button onclick="showPage('users',this)">
+Users
+</button>
+
+<button onclick="showPage('deposits',this)">
+Deposits
+</button>
+
+<button onclick="showPage('withdrawals',this)">
+Withdrawals
+</button>
+
+<button onclick="showPage('transactions',this)">
+Transactions
+</button>
+
+<button onclick="showPage('settings',this)">
+Settings
+</button>
+
 </nav>
 
-<section class="hero">
-  <div>
-    <div class="muted">WELCOME TO VERTEXFX</div>
-    <h1>Trade smarter. Stay in control.</h1>
-    <div class="muted">Secure trading account portal.</div>
-  </div>
 
-  <button class="primary" onclick="account()">Account</button>
-</section>
+<!-- DASHBOARD -->
+
+<section id="dashboard">
 
 <div class="cards">
 
-  <div class="card">
-    <small>Account Balance</small>
-    <strong id="balance">$0.00</strong>
-  </div>
+<div class="card">
 
-  <div class="card">
-    <small>Equity</small>
-    <strong id="equity">$0.00</strong>
-  </div>
+<small>Total Users</small>
 
-  <div class="card">
-    <small>Free Margin</small>
-    <strong id="margin">$0.00</strong>
-  </div>
-
-  <div class="card">
-    <small>Open Positions</small>
-    <strong id="positions">0</strong>
-  </div>
+<strong id="totalUsers">
+0
+</strong>
 
 </div>
 
-<div class="grid">
+<div class="card">
 
-<main>
+<small>Total Deposits</small>
+
+<strong id="totalDeposits">
+$0.00
+</strong>
+
+</div>
+
+<div class="card">
+
+<small>Total Withdrawals</small>
+
+<strong id="totalWithdrawals">
+$0.00
+</strong>
+
+</div>
+
+<div class="card">
+
+<small>Platform Balance</small>
+
+<strong id="platformBalance">
+$0.00
+</strong>
+
+</div>
+
+</div>
+
 
 <div class="panel">
 
-  <div class="head">
+<h2>
+Account Management
+</h2>
 
-    <div>
-      <h2>EUR/USD</h2>
-      <p class="muted">Market data</p>
-    </div>
+<div class="notice">
 
-    <div class="price">1.16834</div>
-
-  </div>
-
-  <div class="chart">
-
-    <svg viewBox="0 0 700 205" preserveAspectRatio="none">
-
-      <polyline
-        fill="none"
-        stroke="#55b9ff"
-        stroke-width="3"
-        points="
-        0,165
-        55,150
-        100,158
-        145,120
-        190,135
-        235,95
-        280,110
-        325,80
-        370,105
-        415,70
-        460,88
-        505,62
-        550,76
-        595,48
-        640,67
-        700,38
-        "
-      />
-
-    </svg>
-
-    <div class="axis">
-      <span>09:00</span>
-      <span>12:00</span>
-      <span>15:00</span>
-      <span>18:00</span>
-    </div>
-
-  </div>
+This control panel manages the internal account ledger.
+A real M-Pesa payment must be confirmed by the payment provider
+before funds are credited.
 
 </div>
+
+</div>
+
+</section>
+
+
+<!-- USERS -->
+
+<section id="users" style="display:none">
 
 <div class="panel">
 
-  <div class="head">
+<h2>
+Users
+</h2>
 
-    <div>
-      <h2>Open Positions</h2>
-      <p class="muted">
-        Live positions appear here after broker execution.
-      </p>
-    </div>
+<div class="actions">
 
-  </div>
-
-  <div id="positionsTable">
-    <div class="muted" style="padding:15px 0">
-      No open positions.
-    </div>
-  </div>
+<button class="primary" onclick="addUser()">
+Add User
+</button>
 
 </div>
 
-</main>
+<br>
 
-<aside>
+<div class="table">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Name</th>
+<th>Email</th>
+<th>Balance</th>
+<th>Status</th>
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+<tbody id="usersTable">
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- DEPOSITS -->
+
+<section id="deposits" style="display:none">
 
 <div class="panel">
 
-  <div class="head">
+<h2>
+Deposit Management
+</h2>
 
-    <div>
-      <h2>Market Order</h2>
-      <p class="muted">Broker execution connection</p>
-    </div>
+<div class="table">
 
-  </div>
+<table>
 
-  <label>
-    Volume (Lots)
-    <input
-      id="lots"
-      type="number"
-      min="0.01"
-      step="0.01"
-      value="0.01"
-    >
-  </label>
+<thead>
 
-  <label>
-    Stop Loss
-    <input id="sl" placeholder="Optional">
-  </label>
+<tr>
 
-  <label>
-    Take Profit
-    <input id="tp" placeholder="Optional">
-  </label>
+<th>User</th>
+<th>Amount</th>
+<th>Method</th>
+<th>Status</th>
+<th>Action</th>
 
-  <div class="actions">
+</tr>
 
-    <button class="sell" onclick="trade('SELL')">
-      SELL
-    </button>
+</thead>
 
-    <button class="buy" onclick="trade('BUY')">
-      BUY
-    </button>
+<tbody id="depositsTable">
 
-  </div>
+</tbody>
 
-  <div class="notice">
-    Live orders are enabled only after an approved broker API is configured on the secure backend.
-  </div>
+</table>
 
 </div>
+
+</div>
+
+</section>
+
+
+<!-- WITHDRAWALS -->
+
+<section id="withdrawals" style="display:none">
 
 <div class="panel">
 
-  <h2 style="font-size:16px">
-    Funding
-  </h2>
+<h2>
+Withdrawal Management
+</h2>
 
-  <button
-    class="primary"
-    style="width:100%;margin-top:8px"
-    onclick="deposit()"
-  >
-    Deposit Funds
-  </button>
+<div class="table">
 
-  <button
-    style="
-      width:100%;
-      margin-top:8px;
-      padding:11px;
-      background:#102233;
-      color:#fff;
-      border:1px solid #29445d;
-      border-radius:8px
-    "
-    onclick="withdraw()"
-  >
-    Request Withdrawal
-  </button>
+<table>
+
+<thead>
+
+<tr>
+
+<th>User</th>
+<th>Amount</th>
+<th>Method</th>
+<th>Status</th>
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+<tbody id="withdrawalsTable">
+
+</tbody>
+
+</table>
+
+</div>
 
 </div>
 
-</aside>
+</section>
 
-</div>
+
+<!-- TRANSACTIONS -->
+
+<section id="transactions" style="display:none">
 
 <div class="panel">
 
-  <h2 style="font-size:16px">
-    Recent Transactions
-  </h2>
+<h2>
+All Transactions
+</h2>
 
-  <div id="tx">
+<div class="table">
 
-    <div
-      class="muted"
-      style="padding:12px 0"
-    >
-      No transactions yet.
-    </div>
+<table>
 
-  </div>
+<thead>
+
+<tr>
+
+<th>Date</th>
+<th>User</th>
+<th>Type</th>
+<th>Amount</th>
+<th>Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="transactionsTable">
+
+</tbody>
+
+</table>
 
 </div>
 
-<div
-  class="muted"
-  style="text-align:center;padding:12px"
+</div>
+
+</section>
+
+
+<!-- SETTINGS -->
+
+<section id="settings" style="display:none">
+
+<div class="panel">
+
+<h2>
+Platform Settings
+</h2>
+
+<label>
+Platform Name
+
+<input
+id="platformName"
+value="Vertex FX"
 >
-  Vertex FX • Live payment and broker connections are controlled by the secure backend.
+</label>
+
+<label>
+Default Currency
+
+<select id="currency">
+
+<option>USD</option>
+<option>KES</option>
+<option>EUR</option>
+<option>GBP</option>
+
+</select>
+
+</label>
+
+<br>
+
+<button class="primary" onclick="saveSettings()">
+Save Settings
+</button>
+
+<div class="notice">
+
+Do not place M-Pesa Consumer Secret,
+Passkey, passwords or private API credentials
+inside this HTML file.
+
+Those credentials belong on the secure backend.
+
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+
+<!-- USER MODAL -->
+
+<div class="modal" id="userModal">
+
+<div class="modalBox">
+
+<button class="close" onclick="closeModal('userModal')">
+×
+</button>
+
+<h2>
+Add User
+</h2>
+
+<label>
+Full Name
+
+<input id="userName">
+</label>
+
+<label>
+Email
+
+<input id="userEmail" type="email">
+</label>
+
+<label>
+Starting Balance
+
+<input id="userBalance" type="number" value="0">
+</label>
+
+<br>
+
+<button class="primary" onclick="saveUser()">
+Create User
+</button>
+
 </div>
 
 </div>
 
-<div class="modal" id="modal">
 
-  <div class="box">
+<!-- BALANCE MODAL -->
 
-    <button
-      class="close"
-      onclick="closeModal()"
-    >
-      ×
-    </button>
+<div class="modal" id="balanceModal">
 
-    <div id="modalBody"></div>
+<div class="modalBox">
 
-  </div>
+<button class="close" onclick="closeModal('balanceModal')">
+×
+</button>
+
+<h2>
+Manage User Balance
+</h2>
+
+<input type="hidden" id="selectedUser">
+
+<label>
+Action
+
+<select id="balanceAction">
+
+<option value="deposit">
+Add Balance
+</option>
+
+<option value="withdraw">
+Remove Balance
+</option>
+
+</select>
+
+</label>
+
+<label>
+Amount
+
+<input id="balanceAmount" type="number">
+</label>
+
+<br>
+
+<button class="primary" onclick="changeBalance()">
+Apply
+</button>
 
 </div>
+
+</div>
+
 
 <script>
 
-let accountState = {
-  balance: 0,
-  transactions: [],
-  positions: []
+let users = JSON.parse(
+localStorage.getItem("vertex_users") || "[]"
+);
+
+let deposits = JSON.parse(
+localStorage.getItem("vertex_deposits") || "[]"
+);
+
+let withdrawals = JSON.parse(
+localStorage.getItem("vertex_withdrawals") || "[]"
+);
+
+let transactions = JSON.parse(
+localStorage.getItem("vertex_transactions") || "[]"
+);
+
+
+function saveData(){
+
+localStorage.setItem(
+"vertex_users",
+JSON.stringify(users)
+);
+
+localStorage.setItem(
+"vertex_deposits",
+JSON.stringify(deposits)
+);
+
+localStorage.setItem(
+"vertex_withdrawals",
+JSON.stringify(withdrawals)
+);
+
+localStorage.setItem(
+"vertex_transactions",
+JSON.stringify(transactions)
+);
+
+}
+
+
+function money(amount){
+
+return "$" +
+Number(amount).toLocaleString(
+undefined,
+{
+minimumFractionDigits:2,
+maximumFractionDigits:2
+}
+);
+
+}
+
+
+function showPage(page,button){
+
+document.querySelectorAll(
+".container > section"
+).forEach(
+section => section.style.display="none"
+);
+
+document.getElementById(page)
+.style.display="block";
+
+document.querySelectorAll(
+"nav button"
+).forEach(
+b => b.classList.remove("active")
+);
+
+button.classList.add("active");
+
+render();
+
+}
+
+
+function addUser(){
+
+document.getElementById("userModal")
+.style.display="flex";
+
+}
+
+
+function saveUser(){
+
+let name =
+document.getElementById("userName").value.trim();
+
+let email =
+document.getElementById("userEmail").value.trim();
+
+let balance =
+Number(
+document.getElementById("userBalance").value
+);
+
+if(!name || !email){
+
+alert("Enter the user's name and email.");
+
+return;
+
+}
+
+let user={
+
+id:Date.now(),
+
+name:name,
+
+email:email,
+
+balance:balance,
+
+status:"Active"
+
 };
 
-const money = n =>
-  '$' +
-  Number(n).toLocaleString(
-    undefined,
-    {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }
-  );
+users.push(user);
+
+if(balance>0){
+
+transactions.push({
+
+date:new Date().toLocaleString(),
+
+user:name,
+
+type:"Initial Balance",
+
+amount:balance,
+
+status:"COMPLETED"
+
+});
+
+}
+
+saveData();
+
+closeModal("userModal");
+
+document.getElementById("userName").value="";
+
+document.getElementById("userEmail").value="";
+
+document.getElementById("userBalance").value="0";
+
+render();
+
+}
+
+
+function manageBalance(id){
+
+document.getElementById("selectedUser")
+.value=id;
+
+document.getElementById("balanceAmount")
+.value="";
+
+document.getElementById("balanceModal")
+.style.display="flex";
+
+}
+
+
+function changeBalance(){
+
+let id=
+Number(
+document.getElementById("selectedUser").value
+);
+
+let action=
+document.getElementById("balanceAction").value;
+
+let amount=
+Number(
+document.getElementById("balanceAmount").value
+);
+
+if(!amount || amount<=0){
+
+alert("Enter a valid amount.");
+
+return;
+
+}
+
+let user=
+users.find(u=>u.id===id);
+
+if(!user){
+
+return;
+
+}
+
+if(action==="deposit"){
+
+user.balance += amount;
+
+transactions.push({
+
+date:new Date().toLocaleString(),
+
+user:user.name,
+
+type:"Admin Deposit",
+
+amount:amount,
+
+status:"COMPLETED"
+
+});
+
+}
+
+if(action==="withdraw"){
+
+if(amount>user.balance){
+
+alert("Insufficient user balance.");
+
+return;
+
+}
+
+user.balance -= amount;
+
+transactions.push({
+
+date:new Date().toLocaleString(),
+
+user:user.name,
+
+type:"Admin Withdrawal",
+
+amount:amount,
+
+status:"COMPLETED"
+
+});
+
+}
+
+saveData();
+
+closeModal("balanceModal");
+
+render();
+
+}
+
+
+function approveDeposit(id){
+
+let deposit=
+deposits.find(d=>d.id===id);
+
+if(!deposit){
+
+return;
+
+}
+
+let user=
+users.find(u=>u.id===deposit.userId);
+
+if(!user){
+
+alert("User not found.");
+
+return;
+
+}
+
+if(deposit.status!=="PENDING"){
+
+return;
+
+}
+
+user.balance += deposit.amount;
+
+deposit.status="COMPLETED";
+
+transactions.push({
+
+date:new Date().toLocaleString(),
+
+user:user.name,
+
+type:"Deposit",
+
+amount:deposit.amount,
+
+status:"COMPLETED"
+
+});
+
+saveData();
+
+render();
+
+}
+
+
+function rejectDeposit(id){
+
+let deposit=
+deposits.find(d=>d.id===id);
+
+if(!deposit){
+
+return;
+
+}
+
+deposit.status="REJECTED";
+
+saveData();
+
+render();
+
+}
+
+
+function approveWithdrawal(id){
+
+let withdrawal=
+withdrawals.find(w=>w.id===id);
+
+if(!withdrawal){
+
+return;
+
+}
+
+let user=
+users.find(u=>u.id===withdrawal.userId);
+
+if(!user){
+
+return;
+
+}
+
+if(withdrawal.status!=="PENDING"){
+
+return;
+
+}
+
+if(withdrawal.amount>user.balance){
+
+alert("User does not have enough balance.");
+
+return;
+
+}
+
+user.balance -= withdrawal.amount;
+
+withdrawal.status="COMPLETED";
+
+transactions.push({
+
+date:new Date().toLocaleString(),
+
+user:user.name,
+
+type:"Withdrawal",
+
+amount:withdrawal.amount,
+
+status:"COMPLETED"
+
+});
+
+saveData();
+
+render();
+
+}
+
+
+function rejectWithdrawal(id){
+
+let withdrawal=
+withdrawals.find(w=>w.id===id);
+
+if(!withdrawal){
+
+return;
+
+}
+
+withdrawal.status="REJECTED";
+
+saveData();
+
+render();
+
+}
+
+
+function renderUsers(){
+
+let table=
+document.getElementById("usersTable");
+
+if(!users.length){
+
+table.innerHTML=
+`
+<tr>
+<td colspan="5">
+No users yet.
+</td>
+</tr>
+`;
+
+return;
+
+}
+
+table.innerHTML=
+users.map(user=>`
+
+<tr>
+
+<td>
+${user.name}
+</td>
+
+<td>
+${user.email}
+</td>
+
+<td>
+${money(user.balance)}
+</td>
+
+<td>
+<span class="status">
+${user.status}
+</span>
+</td>
+
+<td>
+
+<button
+class="secondary"
+onclick="manageBalance(${user.id})"
+>
+Manage Balance
+</button>
+
+</td>
+
+</tr>
+
+`).join("");
+
+}
+
+
+function renderDeposits(){
+
+let table=
+document.getElementById("depositsTable");
+
+if(!deposits.length){
+
+table.innerHTML=
+`
+<tr>
+<td colspan="5">
+No deposits.
+</td>
+</tr>
+`;
+
+return;
+
+}
+
+table.innerHTML=
+deposits.map(d=>{
+
+let user=
+users.find(u=>u.id===d.userId);
+
+return `
+
+<tr>
+
+<td>
+${user ? user.name : "Unknown"}
+</td>
+
+<td>
+${money(d.amount)}
+</td>
+
+<td>
+${d.method}
+</td>
+
+<td>
+<span class="status">
+${d.status}
+</span>
+</td>
+
+<td>
+
+${
+d.status==="PENDING"
+
+?
+
+`
+
+<button
+class="success"
+onclick="approveDeposit(${d.id})"
+>
+Approve
+</button>
+
+<button
+class="danger"
+onclick="rejectDeposit(${d.id})"
+>
+Reject
+</button>
+
+`
+
+:
+
+"-"
+
+}
+
+</td>
+
+</tr>
+
+`;
+
+}).join("");
+
+}
+
+
+function renderWithdrawals(){
+
+let table=
+document.getElementById("withdrawalsTable");
+
+if(!withdrawals.length){
+
+table.innerHTML=
+`
+<tr>
+<td colspan="5">
+No withdrawals.
+</td>
+</tr>
+`;
+
+return;
+
+}
+
+table.innerHTML=
+withdrawals.map(w=>{
+
+let user=
+users.find(u=>u.id===w.userId);
+
+return `
+
+<tr>
+
+<td>
+${user ? user.name : "Unknown"}
+</td>
+
+<td>
+${money(w.amount)}
+</td>
+
+<td>
+${w.method}
+</td>
+
+<td>
+<span class="status">
+${w.status}
+</span>
+</td>
+
+<td>
+
+${
+w.status==="PENDING"
+
+?
+
+`
+
+<button
+class="success"
+onclick="approveWithdrawal(${w.id})"
+>
+Approve
+</button>
+
+<button
+class="danger"
+onclick="rejectWithdrawal(${w.id})"
+>
+Reject
+</button>
+
+`
+
+:
+
+"-"
+
+}
+
+</td>
+
+</tr>
+
+`;
+
+}).join("");
+
+}
+
+
+function renderTransactions(){
+
+let table=
+document.getElementById("transactionsTable");
+
+if(!transactions.length){
+
+table.innerHTML=
+`
+<tr>
+<td colspan="5">
+No transactions.
+</td>
+</tr>
+`;
+
+return;
+
+}
+
+table.innerHTML=
+transactions.map(t=>`
+
+<tr>
+
+<td>
+${t.date}
+</td>
+
+<td>
+${t.user}
+</td>
+
+<td>
+${t.type}
+</td>
+
+<td>
+${money(t.amount)}
+</td>
+
+<td>
+${t.status}
+</td>
+
+</tr>
+
+`).join("");
+
+}
+
+
+function renderDashboard(){
+
+document.getElementById("totalUsers")
+.textContent=users.length;
+
+let depositsTotal=
+deposits
+.filter(d=>d.status==="COMPLETED")
+.reduce(
+(sum,d)=>sum+d.amount,
+0
+);
+
+let withdrawalsTotal=
+withdrawals
+.filter(w=>w.status==="COMPLETED")
+.reduce(
+(sum,w)=>sum+w.amount,
+0
+);
+
+let balanceTotal=
+users.reduce(
+(sum,u)=>sum+u.balance,
+0
+);
+
+document.getElementById("totalDeposits")
+.textContent=money(depositsTotal);
+
+document.getElementById("totalWithdrawals")
+.textContent=money(withdrawalsTotal);
+
+document.getElementById("platformBalance")
+.textContent=money(balanceTotal);
+
+}
+
 
 function render(){
 
-  document.getElementById('balance').textContent =
-    money(accountState.balance);
+renderDashboard();
 
-  document.getElementById('equity').textContent =
-    money(accountState.balance);
+renderUsers();
 
-  document.getElementById('margin').textContent =
-    money(accountState.balance);
+renderDeposits();
 
-  document.getElementById('positions').textContent =
-    accountState.positions.length;
+renderWithdrawals();
 
-  document.getElementById('tx').innerHTML =
-    accountState.transactions.length
-
-    ?
-
-    accountState.transactions
-      .map(x => `
-
-        <div class="row">
-
-          <span>${x.type}</span>
-
-          <span>${money(x.amount)}</span>
-
-          <span>${x.status}</span>
-
-          <span>${x.date}</span>
-
-        </div>
-
-      `)
-      .join('')
-
-    :
-
-    `
-      <div
-        class="muted"
-        style="padding:12px 0"
-      >
-        No transactions yet.
-      </div>
-    `;
+renderTransactions();
 
 }
 
-function modal(html){
 
-  const modalEl =
-    document.getElementById('modal');
+function closeModal(id){
 
-  document.getElementById('modalBody').innerHTML =
-    html;
-
-  modalEl.style.display = 'flex';
+document.getElementById(id)
+.style.display="none";
 
 }
 
-function closeModal(){
 
-  document.getElementById('modal').style.display =
-    'none';
+function saveSettings(){
 
-}
+let name=
+document.getElementById("platformName")
+.value;
 
-function deposit(){
+localStorage.setItem(
+"vertex_platform_name",
+name
+);
 
-  modal(`
-
-    <h2>Deposit Funds</h2>
-
-    <p class="muted">
-      Choose your currency and amount.
-    </p>
-
-    <label>
-      Currency
-
-      <select id="currency">
-
-        <option>KES</option>
-        <option>USD</option>
-        <option>EUR</option>
-        <option>GBP</option>
-
-      </select>
-
-    </label>
-
-    <label>
-      Amount
-
-      <input
-        id="amount"
-        type="number"
-        min="1"
-        value="100000"
-      >
-
-    </label>
-
-    <button
-      class="primary"
-      style="width:100%;margin-top:15px"
-      onclick="requestDeposit()"
-    >
-      Continue to secure payment
-    </button>
-
-    <div class="notice">
-
-      The payment provider must confirm receipt
-      before the trading balance changes.
-
-    </div>
-
-  `);
+alert("Settings saved.");
 
 }
 
-function withdraw(){
-
-  modal(`
-
-    <h2>Withdraw Funds</h2>
-
-    <label>
-      Currency
-
-      <select id="currency">
-
-        <option>KES</option>
-        <option>USD</option>
-        <option>EUR</option>
-        <option>GBP</option>
-
-      </select>
-
-    </label>
-
-    <label>
-      Amount
-
-      <input
-        id="amount"
-        type="number"
-        min="1"
-      >
-
-    </label>
-
-    <button
-      class="primary"
-      style="width:100%;margin-top:15px"
-      onclick="requestWithdraw()"
-    >
-      Submit withdrawal
-    </button>
-
-  `);
-
-}
-
-function account(){
-
-  modal(`
-
-    <h2>Account</h2>
-
-    <p class="muted">
-      Client account portal
-    </p>
-
-    <div class="notice">
-
-      KYC, payment and broker connections
-      are handled by the secure backend.
-
-    </div>
-
-  `);
-
-}
-
-function requestDeposit(){
-
-  const amount =
-    Number(
-      document.getElementById('amount').value
-    );
-
-  if(!amount){
-
-    alert('Enter a valid amount.');
-
-    return;
-
-  }
-
-  accountState.transactions.unshift({
-
-    type:'Deposit request',
-
-    amount:amount,
-
-    status:'PENDING',
-
-    date:new Date().toLocaleDateString()
-
-  });
-
-  render();
-
-  closeModal();
-
-  alert(
-    'Deposit request created. Connect the configured payment provider to complete payment.'
-  );
-
-}
-
-function requestWithdraw(){
-
-  const amount =
-    Number(
-      document.getElementById('amount').value
-    );
-
-  if(!amount){
-
-    alert('Enter a valid amount.');
-
-    return;
-
-  }
-
-  accountState.transactions.unshift({
-
-    type:'Withdrawal request',
-
-    amount:amount,
-
-    status:'PENDING',
-
-    date:new Date().toLocaleDateString()
-
-  });
-
-  render();
-
-  closeModal();
-
-  alert(
-    'Withdrawal request created.'
-  );
-
-}
-
-function trade(type){
-
-  const lots =
-    Number(
-      document.getElementById('lots').value
-    );
-
-  if(!lots){
-
-    alert('Enter a lot size.');
-
-    return;
-
-  }
-
-  alert(
-    'Trade request prepared. The secure backend must send it to the approved broker API before it becomes a live position.'
-  );
-
-}
 
 render();
 
 </script>
 
 </body>
-</html>
+  </html>

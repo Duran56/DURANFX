@@ -1,1986 +1,2354 @@
-
-const express = require("express");
-const cors = require("cors");
-const axios = require("axios");
-const crypto = require("crypto");
-const fs = require("fs");
-const path = require("path");
-require("dotenv").config();
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(express.json());
-
-/* =========================================================
-   DATABASE
-========================================================= */
-
-const DB_FILE = path.join(__dirname, "vertex-data.json");
-
-function loadDB() {
-  if (!fs.existsSync(DB_FILE)) {
-    const initial = {
-      users: [],
-      transactions: [],
-      trades: [],
-      withdrawals: []
-    };
-
-    fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2));
-    return initial;
-  }
-
-  try {
-    return JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
-  } catch (error) {
-    return {
-      users: [],
-      transactions: [],
-      trades: [],
-      withdrawals: []
-    };
-  }
-}
-
-let db = loadDB();
-
-function saveDB() {
-  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
-}
-
-/* =========================================================
-   SESSIONS
-========================================================= */
-
-const sessions = new Map();
-
-function createSession(userId, admin = false) {
-  const token = crypto.randomBytes(32).toString("hex");
-
-  sessions.set(token, {
-    userId,
-    admin,
-    createdAt: Date.now()
-  });
-
-  return token;
-}
-
-function getSession(req) {
-  const header = req.headers.authorization || "";
-
-  if (!header.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = header.substring(7);
-
-  return sessions.get(token) || null;
-}
-
-function requireUser(req, res, next) {
-  const session = getSession(req);
-
-  if (!session || session.admin) {
-    return res.status(401).json({
-      success: false,
-      message: "Please log in."
-    });
-  }
-
-  const user = db.users.find(u => u.id === session.userId);
-
-  if (!user) {
-    return res.status(401).json({
-      success: false,
-      message: "User not found."
-    });
-  }
-
-  req.user = user;
-  next();
-}
-
-function requireAdmin(req, res, next) {
-  const session = getSession(req);
-
-  if (!session || !session.admin) {
-    return res.status(401).json({
-      success: false,
-      message: "Admin access required."
-    });
-  }
-
-  next();
-}
-
-/* =========================================================
-   PASSWORD HASHING
-========================================================= */
-
-function hashPassword(password) {
-  return crypto
-    .createHash("sha256")
-    .update(password)
-    .digest("hex");
-}
-
-/* =========================================================
-   ID GENERATOR
-========================================================= */
-
-function id(prefix) {
-  return (
-    prefix +
-    "_" +
-    Date.now() +
-    "_" +
-    crypto.randomBytes(4).toString("hex")
-  );
-}
-
-/* =========================================================
-   HEALTH
-========================================================= */
-
-app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
-    app: "Vertex FX",
-    status: "online",
-    time: new Date().toISOString()
-  });
-});
-
-/* =========================================================
-   REGISTER
-========================================================= */
-
-app.post("/api/register", (req, res) => {
-  const { name, email, phone, password } = req.body;
-
-  if (!name || !email || !phone || !password) {
-    return res.status(400).json({
-      success: false,
-      message: "Please fill in all fields."
-    });
-  }
-
-  if (password.length < 6) {
-    return res.status(400).json({
-      success: false,
-      message: "Password must contain at least 6 characters."
-    });
-  }
-
-  const cleanEmail = email.trim().toLowerCase();
-
-  const existing = db.users.find(
-    u => u.email.toLowerCase() === cleanEmail
-  );
-
-  if (existing) {
-    return res.status(400).json({
-      success: false,
-      message: "Email is already registered."
-    });
-  }
-
-  const user = {
-    id: id("user"),
-    name: name.trim(),
-    email: cleanEmail,
-    phone: phone.trim(),
-    password: hashPassword(password),
-    balance: 0,
-    createdAt: new Date().toISOString()
-  };
-
-  db.users.push(user);
-  saveDB();
-
-  const token = createSession(user.id);
-
-  res.json({
-    success: true,
-    message: "Account created successfully.",
-    token,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      balance: user.balance
-    }
-  });
-});
-
-/* =========================================================
-   LOGIN
-========================================================= */
-
-app.post("/api/login", (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({
-      success: false,
-      message: "Email and password are required."
-    });
-  }
-
-  const user = db.users.find(
-    u => u.email.toLowerCase() === email.trim().toLowerCase()
-  );
-
-  if (!user || user.password !== hashPassword(password)) {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid email or password."
-    });
-  }
-
-  const token = createSession(user.id);
-
-  res.json({
-    success: true,
-    token,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      balance: user.balance
-    }
-  });
-});
-
-/* =========================================================
-   CURRENT USER
-========================================================= */
-
-app.get("/api/me", requireUser, (req, res) => {
-  res.json({
-    success: true,
-    user: {
-      id: req.user.id,
-      name: req.user.name,
-      email: req.user.email,
-      phone: req.user.phone,
-      balance: req.user.balance
-    }
-  });
-});
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-app.post("/api/logout", (req, res) => {
-  const header = req.headers.authorization || "";
-
-  if (header.startsWith("Bearer ")) {
-    sessions.delete(header.substring(7));
-  }
-
-  res.json({
-    success: true,
-    message: "Logged out."
-  });
-});
-
-/* =========================================================
-   M-PESA ACCESS TOKEN
-========================================================= */
-
-async function getMpesaToken() {
-  if (
-    !process.env.MPESA_CONSUMER_KEY ||
-    !process.env.MPESA_CONSUMER_SECRET
-  ) {
-    throw new Error("M-Pesa credentials are not configured.");
-  }
-
-  const credentials = Buffer.from(
-    process.env.MPESA_CONSUMER_KEY +
-      ":" +
-      process.env.MPESA_CONSUMER_SECRET
-  ).toString("base64");
-
-  const response = await axios.get(
-    "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-    {
-      headers: {
-        Authorization: `Basic ${credentials}`
-      }
-    }
-  );
-
-  return response.data.access_token;
-}
-
-/* =========================================================
-   M-PESA DEPOSIT
-========================================================= */
-
-app.post("/api/mpesa/deposit", requireUser, async (req, res) => {
-  const { amount, phone } = req.body;
-
-  const numericAmount = Number(amount);
-
-  if (!Number.isFinite(numericAmount) || numericAmount < 1) {
-    return res.status(400).json({
-      success: false,
-      message: "Enter a valid deposit amount."
-    });
-  }
-
-  const customerPhone = String(phone || req.user.phone).trim();
-
-  if (!/^254\d{9}$/.test(customerPhone)) {
-    return res.status(400).json({
-      success: false,
-      message: "Use Kenyan phone format 2547XXXXXXXX."
-    });
-  }
-
-  if (
-    !process.env.MPESA_SHORTCODE ||
-    !process.env.MPESA_PASSKEY ||
-    !process.env.MPESA_CALLBACK_URL
-  ) {
-    return res.status(500).json({
-      success: false,
-      message:
-        "M-Pesa is not configured yet. Add your Daraja credentials in environment variables."
-    });
-  }
-
-  try {
-    const token = await getMpesaToken();
-
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/\D/g, "")
-      .slice(0, 14);
-
-    const password = Buffer.from(
-      process.env.MPESA_SHORTCODE +
-        process.env.MPESA_PASSKEY +
-        timestamp
-    ).toString("base64");
-
-    const response = await axios.post(
-      "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-      {
-        BusinessShortCode: Number(process.env.MPESA_SHORTCODE),
-        Password: password,
-        Timestamp: timestamp,
-        TransactionType: "CustomerPayBillOnline",
-        Amount: Math.floor(numericAmount),
-        PartyA: customerPhone,
-        PartyB: Number(process.env.MPESA_SHORTCODE),
-        PhoneNumber: customerPhone,
-        CallBackURL: process.env.MPESA_CALLBACK_URL,
-        AccountReference: "VERTEXFX",
-        TransactionDesc: "Vertex FX deposit"
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
-
-    const transaction = {
-      id: id("dep"),
-      userId: req.user.id,
-      type: "DEPOSIT",
-      amount: Math.floor(numericAmount),
-      phone: customerPhone,
-      status: "PENDING",
-      checkoutRequestID:
-        response.data.CheckoutRequestID || null,
-      createdAt: new Date().toISOString()
-    };
-
-    db.transactions.push(transaction);
-    saveDB();
-
-    res.json({
-      success: true,
-      message:
-        "STK Push sent. Complete the payment on your phone.",
-      transactionId: transaction.id,
-      data: response.data
-    });
-  } catch (error) {
-    console.error(
-      "M-Pesa deposit error:",
-      error.response?.data || error.message
-    );
-
-    res.status(500).json({
-      success: false,
-      message:
-        "Unable to start M-Pesa payment.",
-      details:
-        error.response?.data?.errorMessage ||
-        error.response?.data?.errorCode ||
-        "Check your Daraja configuration."
-    });
-  }
-});
-
-/* =========================================================
-   M-PESA CALLBACK
-========================================================= */
-
-app.post("/api/mpesa/callback", (req, res) => {
-  try {
-    const callback =
-      req.body?.Body?.stkCallback;
-
-    if (!callback) {
-      return res.json({
-        ResultCode: 0,
-        ResultDesc: "Accepted"
-      });
-    }
-
-    const checkoutRequestID =
-      callback.CheckoutRequestID;
-
-    const resultCode =
-      callback.ResultCode;
-
-    const transaction =
-      db.transactions.find(
-        t =>
-          t.checkoutRequestID ===
-          checkoutRequestID
-      );
-
-    if (!transaction) {
-      return res.json({
-        ResultCode: 0,
-        ResultDesc: "Accepted"
-      });
-    }
-
-    if (resultCode === 0) {
-      transaction.status = "COMPLETED";
-
-      const user = db.users.find(
-        u => u.id === transaction.userId
-      );
-
-      if (user) {
-        user.balance =
-          Number(user.balance) +
-          Number(transaction.amount);
-      }
-    } else {
-      transaction.status = "FAILED";
-    }
-
-    transaction.callback = callback;
-    transaction.completedAt =
-      new Date().toISOString();
-
-    saveDB();
-
-    res.json({
-      ResultCode: 0,
-      ResultDesc: "Accepted"
-    });
-  } catch (error) {
-    console.error("Callback error:", error);
-
-    res.json({
-      ResultCode: 0,
-      ResultDesc: "Accepted"
-    });
-  }
-});
-
-/* =========================================================
-   TRANSACTIONS
-========================================================= */
-
-app.get("/api/transactions", requireUser, (req, res) => {
-  const transactions = db.transactions
-    .filter(t => t.userId === req.user.id)
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt) -
-        new Date(a.createdAt)
-    );
-
-  res.json({
-    success: true,
-    transactions
-  });
-});
-
-/* =========================================================
-   WITHDRAWAL REQUEST
-========================================================= */
-
-app.post("/api/withdraw", requireUser, (req, res) => {
-  const { amount, phone } = req.body;
-
-  const numericAmount = Number(amount);
-
-  if (
-    !Number.isFinite(numericAmount) ||
-    numericAmount <= 0
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "Enter a valid withdrawal amount."
-    });
-  }
-
-  if (numericAmount > req.user.balance) {
-    return res.status(400).json({
-      success: false,
-      message: "Insufficient wallet balance."
-    });
-  }
-
-  const customerPhone =
-    String(phone || req.user.phone).trim();
-
-  if (!/^254\d{9}$/.test(customerPhone)) {
-    return res.status(400).json({
-      success: false,
-      message:
-        "Use Kenyan phone format 2547XXXXXXXX."
-    });
-  }
-
-  req.user.balance -= numericAmount;
-
-  const withdrawal = {
-    id: id("wd"),
-    userId: req.user.id,
-    amount: numericAmount,
-    phone: customerPhone,
-    status: "PENDING",
-    createdAt: new Date().toISOString()
-  };
-
-  db.withdrawals.push(withdrawal);
-
-  db.transactions.push({
-    id: id("tx"),
-    userId: req.user.id,
-    type: "WITHDRAWAL",
-    amount: numericAmount,
-    status: "PENDING",
-    withdrawalId: withdrawal.id,
-    createdAt: new Date().toISOString()
-  });
-
-  saveDB();
-
-  res.json({
-    success: true,
-    message:
-      "Withdrawal request submitted for review.",
-    withdrawal
-  });
-});
-
-/* =========================================================
-   MARKET PRICE
-   SIMULATED FOR DEMO
-========================================================= */
-
-let marketPrice = 100;
-
-setInterval(() => {
-  const movement =
-    (Math.random() - 0.5) * 2;
-
-  marketPrice =
-    Math.max(
-      1,
-      Number(
-        (marketPrice + movement).toFixed(2)
-      )
-    );
-}, 3000);
-
-app.get("/api/market", (req, res) => {
-  res.json({
-    success: true,
-    asset: "VFX/USD",
-    price: marketPrice,
-    mode: "SIMULATED"
-  });
-});
-
-/* =========================================================
-   TRADE
-   SIMULATED
-========================================================= */
-
-app.post("/api/trade", requireUser, (req, res) => {
-  const { side, amount } = req.body;
-
-  const tradeAmount = Number(amount);
-
-  if (!["BUY", "SELL"].includes(side)) {
-    return res.status(400).json({
-      success: false,
-      message: "Trade side must be BUY or SELL."
-    });
-  }
-
-  if (
-    !Number.isFinite(tradeAmount) ||
-    tradeAmount <= 0
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "Enter a valid trade amount."
-    });
-  }
-
-  if (tradeAmount > req.user.balance) {
-    return res.status(400).json({
-      success: false,
-      message: "Insufficient balance."
-    });
-  }
-
-  /*
-    This is deliberately a DEMO trade.
-    It does not represent a real financial market.
-  */
-
-  req.user.balance -= tradeAmount;
-
-  const trade = {
-    id: id("trade"),
-    userId: req.user.id,
-    side,
-    amount: tradeAmount,
-    price: marketPrice,
-    status: "SIMULATED",
-    createdAt: new Date().toISOString()
-  };
-
-  db.trades.push(trade);
-
-  db.transactions.push({
-    id: id("trade_tx"),
-    userId: req.user.id,
-    type: "TRADE",
-    amount: tradeAmount,
-    status: "SIMULATED",
-    tradeId: trade.id,
-    createdAt: new Date().toISOString()
-  });
-
-  saveDB();
-
-  res.json({
-    success: true,
-    message:
-      "Demo trade executed.",
-    trade,
-    balance: req.user.balance
-  });
-});
-
-/* =========================================================
-   USER TRADES
-========================================================= */
-
-app.get("/api/trades", requireUser, (req, res) => {
-  const trades = db.trades
-    .filter(t => t.userId === req.user.id)
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt) -
-        new Date(a.createdAt)
-    );
-
-  res.json({
-    success: true,
-    trades
-  });
-});
-
-/* =========================================================
-   ADMIN LOGIN
-========================================================= */
-
-app.post("/api/admin/login", (req, res) => {
-  const { username, password } = req.body;
-
-  const adminUsername =
-    process.env.ADMIN_USERNAME || "admin";
-
-  const adminPassword =
-    process.env.ADMIN_PASSWORD ||
-    "CHANGE_THIS_PASSWORD";
-
-  if (
-    username !== adminUsername ||
-    password !== adminPassword
-  ) {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid admin credentials."
-    });
-  }
-
-  const token = createSession(
-    "ADMIN",
-    true
-  );
-
-  res.json({
-    success: true,
-    token
-  });
-});
-
-/* =========================================================
-   ADMIN DASHBOARD
-========================================================= */
-
-app.get(
-  "/api/admin/dashboard",
-  requireAdmin,
-  (req, res) => {
-    res.json({
-      success: true,
-
-      statistics: {
-        users: db.users.length,
-
-        totalDeposits: db.transactions
-          .filter(
-            t =>
-              t.type === "DEPOSIT" &&
-              t.status === "COMPLETED"
-          )
-          .reduce(
-            (sum, t) =>
-              sum + Number(t.amount),
-            0
-          ),
-
-        pendingWithdrawals:
-          db.withdrawals.filter(
-            w => w.status === "PENDING"
-          ).length,
-
-        totalTrades: db.trades.length
-      },
-
-      users: db.users.map(u => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        phone: u.phone,
-        balance: u.balance,
-        createdAt: u.createdAt
-      })),
-
-      withdrawals: db.withdrawals
-    });
-  }
-);
-
-/* =========================================================
-   ADMIN APPROVE WITHDRAWAL
-========================================================= */
-
-app.post(
-  "/api/admin/withdrawals/:id/approve",
-  requireAdmin,
-  (req, res) => {
-    const withdrawal =
-      db.withdrawals.find(
-        w => w.id === req.params.id
-      );
-
-    if (!withdrawal) {
-      return res.status(404).json({
-        success: false,
-        message: "Withdrawal not found."
-      });
-    }
-
-    if (withdrawal.status !== "PENDING") {
-      return res.status(400).json({
-        success: false,
-        message:
-          "This withdrawal has already been processed."
-      });
-    }
-
-    withdrawal.status =
-      "APPROVED_FOR_PAYMENT";
-
-    withdrawal.approvedAt =
-      new Date().toISOString();
-
-    saveDB();
-
-    res.json({
-      success: true,
-      message:
-        "Withdrawal approved for payment processing.",
-      withdrawal
-    });
-  }
-);
-
-/* =========================================================
-   ADMIN REJECT WITHDRAWAL
-========================================================= */
-
-app.post(
-  "/api/admin/withdrawals/:id/reject",
-  requireAdmin,
-  (req, res) => {
-    const withdrawal =
-      db.withdrawals.find(
-        w => w.id === req.params.id
-      );
-
-    if (!withdrawal) {
-      return res.status(404).json({
-        success: false,
-        message: "Withdrawal not found."
-      });
-    }
-
-    if (withdrawal.status !== "PENDING") {
-      return res.status(400).json({
-        success: false,
-        message:
-          "This withdrawal has already been processed."
-      });
-    }
-
-    const user = db.users.find(
-      u => u.id === withdrawal.userId
-    );
-
-    if (user) {
-      user.balance +=
-        Number(withdrawal.amount);
-    }
-
-    withdrawal.status = "REJECTED";
-
-    withdrawal.rejectedAt =
-      new Date().toISOString();
-
-    saveDB();
-
-    res.json({
-      success: true,
-      message:
-        "Withdrawal rejected and balance returned.",
-      withdrawal
-    });
-  }
-);
-
-/* =========================================================
-   ADMIN USERS
-========================================================= */
-
-app.get(
-  "/api/admin/users",
-  requireAdmin,
-  (req, res) => {
-    res.json({
-      success: true,
-      users: db.users.map(u => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        phone: u.phone,
-        balance: u.balance,
-        createdAt: u.createdAt
-      }))
-    });
-  }
-);
-
-/* =========================================================
-   FRONTEND
-========================================================= */
-
-const HTML = `
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vertex FX</title>
 
-<meta charset="UTF-8">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-<meta name="viewport"
-content="width=device-width,initial-scale=1.0">
+    body {
+      font-family: Arial, sans-serif;
+      background: #07111f;
+      color: #ffffff;
+      min-height: 100vh;
+    }
 
-<title>Vertex FX</title>
+    button,
+    input {
+      font: inherit;
+    }
 
-<style>
+    button {
+      cursor: pointer;
+    }
 
-*{
-box-sizing:border-box;
-}
+    .hidden {
+      display: none !important;
+    }
 
-body{
-margin:0;
-font-family:Arial,Helvetica,sans-serif;
-background:#08111f;
-color:white;
-}
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
 
-header{
-background:#101c2e;
-padding:18px 25px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-border-bottom:1px solid #26354a;
-}
+    /* HEADER */
 
-.logo{
-font-size:25px;
-font-weight:bold;
-}
+    header {
+      background: #0b1728;
+      border-bottom: 1px solid #1c3048;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
 
-.container{
-max-width:1100px;
-margin:auto;
-padding:25px;
-}
+    .header-inner {
+      max-width: 1200px;
+      margin: auto;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
 
-.card{
-background:#101c2e;
-border:1px solid #26354a;
-border-radius:14px;
-padding:20px;
-margin-bottom:20px;
-}
+    .logo {
+      font-size: 25px;
+      font-weight: 800;
+      color: #26d97c;
+    }
 
-input,select{
-width:100%;
-padding:13px;
-margin:8px 0;
-border-radius:8px;
-border:1px solid #394b63;
-background:#08111f;
-color:white;
-}
+    .logo span {
+      color: white;
+    }
 
-button{
-border:0;
-padding:12px 18px;
-border-radius:8px;
-cursor:pointer;
-font-weight:bold;
-margin-top:8px;
-}
+    .status {
+      font-size: 12px;
+      color: #26d97c;
+    }
 
-.primary{
-background:#2f80ed;
-color:white;
-}
+    /* AUTH */
 
-.success{
-background:#27ae60;
-color:white;
-}
+    .auth-wrapper {
+      min-height: calc(100vh - 70px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 25px;
+    }
 
-.danger{
-background:#e74c3c;
-color:white;
-}
+    .auth-card {
+      width: 100%;
+      max-width: 430px;
+      background: #0d1b2e;
+      border: 1px solid #213954;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
 
-.secondary{
-background:#34495e;
-color:white;
-}
+    .auth-card h1 {
+      text-align: center;
+      margin-bottom: 8px;
+    }
 
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-gap:15px;
-}
+    .subtitle {
+      text-align: center;
+      color: #91a4bb;
+      margin-bottom: 25px;
+    }
 
-.stat{
-font-size:27px;
-font-weight:bold;
-margin-top:8px;
-}
+    .tabs {
+      display: flex;
+      background: #07111f;
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 20px;
+    }
 
-.hidden{
-display:none;
-}
+    .tabs button {
+      width: 50%;
+      padding: 12px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #9aabc0;
+    }
 
-.nav button{
-margin-right:5px;
-}
+    .tabs button.active {
+      background: #26d97c;
+      color: #04100a;
+      font-weight: bold;
+    }
 
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:15px;
-}
+    label {
+      display: block;
+      margin: 12px 0 7px;
+      color: #b7c5d7;
+      font-size: 14px;
+    }
 
-th,td{
-padding:10px;
-border-bottom:1px solid #26354a;
-text-align:left;
-}
+    input {
+      width: 100%;
+      padding: 13px;
+      border-radius: 9px;
+      border: 1px solid #29435f;
+      background: #081522;
+      color: white;
+      outline: none;
+    }
 
-.small{
-color:#9eafc5;
-font-size:13px;
-}
+    input:focus {
+      border-color: #26d97c;
+    }
 
-#message{
-padding:12px;
-margin-bottom:15px;
-border-radius:8px;
-display:none;
-}
+    .primary-btn {
+      width: 100%;
+      margin-top: 18px;
+      padding: 14px;
+      border: 0;
+      border-radius: 9px;
+      background: #26d97c;
+      color: #04100a;
+      font-weight: bold;
+    }
 
-</style>
+    .primary-btn:hover {
+      opacity: .9;
+    }
 
+    .danger-btn {
+      background: #e34b5f;
+      color: white;
+    }
+
+    .secondary-btn {
+      background: #182a40;
+      color: white;
+      border: 1px solid #2b4561;
+    }
+
+    .message {
+      margin-top: 15px;
+      padding: 11px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .message.success {
+      display: block;
+      background: rgba(38,217,124,.12);
+      color: #54e995;
+    }
+
+    .message.error {
+      display: block;
+      background: rgba(227,75,95,.12);
+      color: #ff7283;
+    }
+
+    /* DASHBOARD */
+
+    .dashboard {
+      padding: 25px 0 60px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      gap: 15px;
+    }
+
+    .welcome h2 {
+      margin-bottom: 5px;
+    }
+
+    .welcome p {
+      color: #8fa2b9;
+    }
+
+    .logout {
+      padding: 10px 17px;
+      border: 1px solid #334b65;
+      background: #111f32;
+      color: white;
+      border-radius: 8px;
+    }
+
+    .balance-card {
+      background: linear-gradient(135deg, #102b27, #0d1b2e);
+      border: 1px solid #245b47;
+      border-radius: 18px;
+      padding: 25px;
+      margin-bottom: 20px;
+    }
+
+    .balance-label {
+      color: #9ab0c6;
+      font-size: 14px;
+    }
+
+    .balance {
+      font-size: 38px;
+      font-weight: 800;
+      margin: 8px 0;
+    }
+
+    .currency {
+      color: #26d97c;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: #0d1b2e;
+      border: 1px solid #213954;
+      border-radius: 15px;
+      padding: 20px;
+    }
+
+    .card h3 {
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      color: #8fa2b9;
+      font-size: 14px;
+    }
+
+    .price {
+      font-size: 27px;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+
+    .green {
+      color: #26d97c;
+    }
+
+    .yellow {
+      color: #f4c95d;
+    }
+
+    .red {
+      color: #ff6578;
+    }
+
+    .section {
+      background: #0d1b2e;
+      border: 1px solid #213954;
+      border-radius: 15px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .section h2 {
+      margin-bottom: 16px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .trade-box {
+      background: #081522;
+      border-radius: 12px;
+      padding: 18px;
+      border: 1px solid #1d344c;
+    }
+
+    .trade-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .trade-buttons button {
+      border: 0;
+      padding: 14px;
+      border-radius: 9px;
+      font-weight: bold;
+    }
+
+    .buy {
+      background: #26d97c;
+      color: #031008;
+    }
+
+    .sell {
+      background: #e34b5f;
+      color: white;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 13px;
+      border-bottom: 1px solid #213954;
+      font-size: 14px;
+    }
+
+    th {
+      color: #9bb0c7;
+    }
+
+    td {
+      color: #dce5ef;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .badge.pending {
+      background: #453b1b;
+      color: #f5d76e;
+    }
+
+    .badge.completed {
+      background: #103b28;
+      color: #4bea91;
+    }
+
+    .badge.failed,
+    .badge.rejected {
+      background: #431c25;
+      color: #ff7180;
+    }
+
+    .badge.simulated {
+      background: #1b3046;
+      color: #79b9f5;
+    }
+
+    .admin-box {
+      border-color: #594f24;
+      background: #17180f;
+    }
+
+    .admin-statistics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: #081522;
+      border: 1px solid #2a3d50;
+      padding: 18px;
+      border-radius: 12px;
+    }
+
+    .stat small {
+      color: #879bb2;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 25px;
+      margin-top: 8px;
+    }
+
+    .admin-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .admin-actions button {
+      padding: 7px 10px;
+      border: 0;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .approve {
+      background: #26d97c;
+      color: #04100a;
+    }
+
+    .reject {
+      background: #e34b5f;
+      color: white;
+    }
+
+    .notice {
+      background: #11283d;
+      border: 1px solid #264b6a;
+      color: #a9c7e2;
+      padding: 13px;
+      border-radius: 9px;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+
+    footer {
+      text-align: center;
+      color: #60758c;
+      padding: 30px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 800px) {
+      .cards,
+      .grid-2,
+      .admin-statistics {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .balance {
+        font-size: 31px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
 <header>
-
-<div class="logo">
-Vertex FX
-</div>
-
-<div id="headerUser">
-Not logged in
-</div>
-
+  <div class="header-inner">
+    <div class="logo">Vertex <span>FX</span></div>
+    <div id="onlineStatus" class="status">● Online</div>
+  </div>
 </header>
 
-<div class="container">
-
-<div id="message"></div>
-
 <!-- AUTH -->
+<div id="authScreen" class="auth-wrapper">
 
-<section id="auth">
+  <div class="auth-card">
 
-<div class="card">
+    <h1>Vertex FX</h1>
+    <p class="subtitle">Trading & Wallet Platform</p>
 
-<h2>Login</h2>
+    <div class="tabs">
+      <button id="loginTab" class="active" onclick="showLogin()">Login</button>
+      <button id="registerTab" onclick="showRegister()">Create Account</button>
+    </div>
 
-<input
-id="loginEmail"
-type="email"
-placeholder="Email">
+    <!-- LOGIN -->
 
-<input
-id="loginPassword"
-type="password"
-placeholder="Password">
+    <form id="loginForm">
 
-<button
-class="primary"
-onclick="login()">
-Login
-</button>
+      <label>Email</label>
+      <input
+        id="loginEmail"
+        type="email"
+        placeholder="Enter your email"
+        required
+      >
 
-</div>
+      <label>Password</label>
+      <input
+        id="loginPassword"
+        type="password"
+        placeholder="Enter your password"
+        required
+      >
 
-<div class="card">
+      <button class="primary-btn" type="submit">
+        Login
+      </button>
 
-<h2>Create Account</h2>
+    </form>
 
-<input
-id="regName"
-placeholder="Full name">
+    <!-- REGISTER -->
 
-<input
-id="regEmail"
-type="email"
-placeholder="Email">
+    <form id="registerForm" class="hidden">
 
-<input
-id="regPhone"
-placeholder="Phone e.g. 254712345678">
+      <label>Full Name</label>
+      <input
+        id="registerName"
+        type="text"
+        placeholder="Your full name"
+        required
+      >
 
-<input
-id="regPassword"
-type="password"
-placeholder="Password">
+      <label>Email</label>
+      <input
+        id="registerEmail"
+        type="email"
+        placeholder="Your email"
+        required
+      >
 
-<button
-class="success"
-onclick="register()">
-Register
-</button>
+      <label>M-Pesa Phone</label>
+      <input
+        id="registerPhone"
+        type="text"
+        placeholder="2547XXXXXXXX"
+        required
+      >
 
-</div>
+      <label>Password</label>
+      <input
+        id="registerPassword"
+        type="password"
+        placeholder="Minimum 6 characters"
+        required
+      >
 
-</section>
+      <button class="primary-btn" type="submit">
+        Create Account
+      </button>
 
-<!-- APP -->
+    </form>
 
-<section id="app" class="hidden">
+    <div id="authMessage" class="message"></div>
 
-<div class="nav">
-
-<button
-class="primary"
-onclick="showPage('dashboard')">
-Dashboard
-</button>
-
-<button
-class="primary"
-onclick="showPage('wallet')">
-Wallet
-</button>
-
-<button
-class="primary"
-onclick="showPage('trade')">
-Trade
-</button>
-
-<button
-class="secondary"
-onclick="logout()">
-Logout
-</button>
+  </div>
 
 </div>
 
-<br>
 
-<!-- DASHBOARD -->
+<!-- USER DASHBOARD -->
 
-<div id="dashboardPage">
+<div id="dashboardScreen" class="hidden">
 
-<div class="grid">
+  <div class="container dashboard">
 
-<div class="card">
+    <div class="topbar">
 
-<div class="small">
-Wallet Balance
+      <div class="welcome">
+        <h2>Welcome, <span id="userName">User</span></h2>
+        <p id="userEmail"></p>
+      </div>
+
+      <button class="logout" onclick="logout()">
+        Logout
+      </button>
+
+    </div>
+
+
+    <!-- BALANCE -->
+
+    <div class="balance-card">
+
+      <div class="balance-label">
+        Available Wallet Balance
+      </div>
+
+      <div class="balance">
+        KES <span id="balance">0.00</span>
+      </div>
+
+      <button
+        class="secondary-btn"
+        style="padding:9px 15px;border-radius:7px;"
+        onclick="refreshAccount()"
+      >
+        Refresh Balance
+      </button>
+
+    </div>
+
+
+    <!-- QUICK CARDS -->
+
+    <div class="cards">
+
+      <div class="card">
+        <h3>Wallet</h3>
+        <p>Your available account balance.</p>
+        <div class="price green">
+          KES <span id="walletCard">0.00</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Market</h3>
+        <p>Simulated market price</p>
+        <div class="price">
+          <span id="marketPrice">100.00</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Account</h3>
+        <p id="accountPhone">---</p>
+        <div class="price green">ACTIVE</div>
+      </div>
+
+    </div>
+
+
+    <!-- WALLET -->
+
+    <div class="section">
+
+      <h2>💰 Wallet</h2>
+
+      <div class="notice">
+        M-Pesa deposits use your configured Safaricom Daraja connection.
+        Complete the STK Push on your phone when requested.
+      </div>
+
+      <div class="grid-2">
+
+        <!-- DEPOSIT -->
+
+        <div class="trade-box">
+
+          <h3>📥 Deposit with M-Pesa</h3>
+
+          <label>Amount (KES)</label>
+          <input
+            id="depositAmount"
+            type="number"
+            min="1"
+            placeholder="e.g. 500"
+          >
+
+          <label>M-Pesa Phone</label>
+          <input
+            id="depositPhone"
+            type="text"
+            placeholder="2547XXXXXXXX"
+          >
+
+          <button
+            class="primary-btn"
+            onclick="depositMoney()"
+          >
+            Deposit with M-Pesa
+          </button>
+
+        </div>
+
+
+        <!-- WITHDRAW -->
+
+        <div class="trade-box">
+
+          <h3>📤 Withdraw</h3>
+
+          <label>Amount (KES)</label>
+          <input
+            id="withdrawAmount"
+            type="number"
+            min="1"
+            placeholder="e.g. 500"
+          >
+
+          <label>M-Pesa Phone</label>
+          <input
+            id="withdrawPhone"
+            type="text"
+            placeholder="2547XXXXXXXX"
+          >
+
+          <button
+            class="primary-btn"
+            onclick="withdrawMoney()"
+          >
+            Request Withdrawal
+          </button>
+
+          <p style="color:#879bb2;font-size:12px;margin-top:10px;">
+            Withdrawals are submitted for admin/payment processing.
+          </p>
+
+        </div>
+
+      </div>
+
+      <div id="walletMessage" class="message"></div>
+
+    </div>
+
+
+    <!-- TRADING -->
+
+    <div class="section">
+
+      <h2>📊 Trading</h2>
+
+      <div class="notice">
+        Demo trading mode. Market prices and trades are simulated and do not
+        represent execution in a real financial market.
+      </div>
+
+      <div class="grid-2">
+
+        <div class="trade-box">
+
+          <h3>VFX/USD</h3>
+
+          <div style="font-size:34px;font-weight:bold;margin:15px 0;">
+            <span id="tradePrice">100.00</span>
+          </div>
+
+          <p style="color:#8fa2b9;">
+            Current simulated market price
+          </p>
+
+        </div>
+
+
+        <div class="trade-box">
+
+          <label>Trade Amount (KES)</label>
+
+          <input
+            id="tradeAmount"
+            type="number"
+            min="1"
+            placeholder="Enter amount"
+          >
+
+          <div class="trade-buttons">
+
+            <button
+              class="buy"
+              onclick="trade('BUY')"
+            >
+              BUY
+            </button>
+
+            <button
+              class="sell"
+              onclick="trade('SELL')"
+            >
+              SELL
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div id="tradeMessage" class="message"></div>
+
+    </div>
+
+
+    <!-- TRANSACTIONS -->
+
+    <div class="section">
+
+      <h2>📜 Transaction History</h2>
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+
+          <tbody id="transactionsTable">
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+
+    <!-- TRADES -->
+
+    <div class="section">
+
+      <h2>📈 Trade History</h2>
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Side</th>
+              <th>Amount</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+
+          <tbody id="tradesTable">
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+
+    <!-- ADMIN -->
+
+    <div class="section admin-box">
+
+      <h2>⚙️ Administration</h2>
+
+      <p style="color:#9aabc0;margin-bottom:15px;">
+        Admin access is separate from normal user accounts.
+      </p>
+
+      <button
+        class="primary-btn"
+        style="max-width:250px;"
+        onclick="showAdminLogin()"
+      >
+        Open Admin Login
+      </button>
+
+    </div>
+
+  </div>
+
 </div>
+
+
+<!-- ADMIN SCREEN -->
+
+<div id="adminScreen" class="hidden">
+
+  <div class="container dashboard">
+
+    <div class="topbar">
+
+      <div>
+        <h2>Vertex FX Admin</h2>
+        <p style="color:#8fa2b9;">
+          Administration Dashboard
+        </p>
+      </div>
+
+      <button class="logout" onclick="adminLogout()">
+        Admin Logout
+      </button>
+
+    </div>
+
+
+    <div class="admin-statistics">
+
+      <div class="stat">
+        <small>Users</small>
+        <strong id="statUsers">0</strong>
+      </div>
+
+      <div class="stat">
+        <small>Total Deposits</small>
+        <strong id="statDeposits">KES 0</strong>
+      </div>
+
+      <div class="stat">
+        <small>Pending Withdrawals</small>
+        <strong id="statWithdrawals">0</strong>
+      </div>
+
+      <div class="stat">
+        <small>Total Trades</small>
+        <strong id="statTrades">0</strong>
+      </div>
+
+    </div>
+
+
+    <div class="section">
+
+      <h2>👥 Users</h2>
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Balance</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+
+          <tbody id="usersTable"></tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+
+    <div class="section">
+
+      <h2>💸 Withdrawal Requests</h2>
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Phone</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody id="withdrawalsTable"></tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+    <div id="adminMessage" class="message"></div>
+
+  </div>
+
+</div>
+
+
+<!-- ADMIN LOGIN MODAL -->
 
 <div
-class="stat"
-id="balance">
-KES 0
-</div>
+  id="adminModal"
+  class="auth-wrapper hidden"
+  style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;"
+>
+
+  <div class="auth-card">
+
+    <h2>Admin Login</h2>
+
+    <p class="subtitle">
+      Authorized administration only
+    </p>
+
+    <label>Username</label>
+
+    <input
+      id="adminUsername"
+      type="text"
+      placeholder="Admin username"
+    >
+
+    <label>Password</label>
+
+    <input
+      id="adminPassword"
+      type="password"
+      placeholder="Admin password"
+    >
+
+    <button
+      class="primary-btn"
+      onclick="adminLogin()"
+    >
+      Login as Admin
+    </button>
+
+    <button
+      class="primary-btn secondary-btn"
+      onclick="closeAdminLogin()"
+    >
+      Cancel
+    </button>
+
+    <div id="adminLoginMessage" class="message"></div>
+
+  </div>
 
 </div>
 
-<div class="card">
 
-<div class="small">
-Market Price
-</div>
+<footer>
+  Vertex FX © 2026 — Trading and wallet platform
+</footer>
 
-<div
-class="stat"
-id="marketPrice">
-100.00
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="small">
-Account
-</div>
-
-<div
-class="stat"
-id="userName">
-User
-</div>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<h2>Welcome to Vertex FX</h2>
-
-<p>
-Use the Wallet section to test deposits
-and withdrawal requests.
-</p>
-
-<p>
-Use the Trade section for simulated
-BUY and SELL trades.
-</p>
-
-<p class="small">
-Trading in this prototype is simulated.
-</p>
-
-</div>
-
-</div>
-
-<!-- WALLET -->
-
-<div
-id="walletPage"
-class="hidden">
-
-<div class="card">
-
-<h2>Wallet</h2>
-
-<div
-class="stat"
-id="walletBalance">
-KES 0
-</div>
-
-</div>
-
-<div class="card">
-
-<h2>Deposit with M-Pesa</h2>
-
-<input
-id="depositAmount"
-type="number"
-placeholder="Amount in KES">
-
-<input
-id="depositPhone"
-placeholder="2547XXXXXXXX">
-
-<button
-class="success"
-onclick="deposit()">
-Deposit
-</button>
-
-<p class="small">
-A real STK Push requires your Daraja
-credentials and callback URL.
-</p>
-
-</div>
-
-<div class="card">
-
-<h2>Withdraw</h2>
-
-<input
-id="withdrawAmount"
-type="number"
-placeholder="Amount in KES">
-
-<input
-id="withdrawPhone"
-placeholder="2547XXXXXXXX">
-
-<button
-class="danger"
-onclick="withdraw()">
-Request Withdrawal
-</button>
-
-</div>
-
-<div class="card">
-
-<h2>Transactions</h2>
-
-<div id="transactions">
-Loading...
-</div>
-
-</div>
-
-</div>
-
-<!-- TRADE -->
-
-<div
-id="tradePage"
-class="hidden">
-
-<div class="card">
-
-<h2>Demo Trading</h2>
-
-<p>
-Asset: VFX/USD
-</p>
-
-<div
-class="stat"
-id="tradePrice">
-100.00
-</div>
-
-<input
-id="tradeAmount"
-type="number"
-placeholder="Amount">
-
-<button
-class="success"
-onclick="trade('BUY')">
-BUY
-</button>
-
-<button
-class="danger"
-onclick="trade('SELL')">
-SELL
-</button>
-
-<p class="small">
-This is simulated trading for testing.
-No real market order is sent.
-</p>
-
-</div>
-
-<div class="card">
-
-<h2>Trade History</h2>
-
-<div id="trades">
-Loading...
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-</div>
 
 <script>
 
-let token =
-localStorage.getItem("vertexToken");
+  /* =====================================================
+     GLOBAL STATE
+  ===================================================== */
 
-let currentUser = null;
+  let userToken = localStorage.getItem("vertexUserToken") || "";
+  let adminToken = localStorage.getItem("vertexAdminToken") || "";
 
-function showMessage(text){
+  let currentUser = null;
 
-const box =
-document.getElementById("message");
 
-box.innerText = text;
+  /* =====================================================
+     HELPERS
+  ===================================================== */
 
-box.style.display = "block";
+  function apiHeaders(token) {
 
-setTimeout(() => {
-box.style.display = "none";
-},5000);
+    const headers = {
+      "Content-Type": "application/json"
+    };
 
-}
+    if (token) {
+      headers.Authorization = "Bearer " + token;
+    }
 
-async function api(url,options={}){
+    return headers;
+  }
 
-options.headers =
-options.headers || {};
 
-options.headers["Content-Type"] =
-"application/json";
+  async function api(url, options = {}) {
 
-if(token){
+    const response = await fetch(url, options);
 
-options.headers["Authorization"] =
-"Bearer " + token;
+    let data;
 
-}
+    try {
+      data = await response.json();
+    } catch {
+      data = {
+        success: false,
+        message: "Invalid server response."
+      };
+    }
 
-const response =
-await fetch(url,options);
+    if (!response.ok) {
+      throw new Error(
+        data.message ||
+        data.details ||
+        "Request failed."
+      );
+    }
 
-const data =
-await response.json();
+    return data;
+  }
 
-if(!response.ok){
 
-throw new Error(
-data.message || "Request failed"
-);
+  function showMessage(elementId, message, success = true) {
 
-}
+    const element = document.getElementById(elementId);
 
-return data;
+    element.textContent = message;
 
-}
+    element.className =
+      "message " +
+      (success ? "success" : "error");
 
-async function register(){
+  }
 
-try{
 
-const data =
-await api("/api/register",{
+  function formatMoney(amount) {
 
-method:"POST",
+    return Number(amount || 0).toLocaleString(
+      "en-KE",
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }
+    );
 
-body:JSON.stringify({
+  }
 
-name:
-document.getElementById("regName").value,
 
-email:
-document.getElementById("regEmail").value,
+  function formatDate(date) {
 
-phone:
-document.getElementById("regPhone").value,
+    if (!date) return "-";
 
-password:
-document.getElementById("regPassword").value
+    return new Date(date).toLocaleString();
 
-})
+  }
 
-});
 
-token = data.token;
+  function badge(status) {
 
-localStorage.setItem(
-"vertexToken",
-token
-);
+    const value = String(status || "").toLowerCase();
 
-currentUser = data.user;
+    let className = "pending";
 
-openApp();
+    if (value === "completed") {
+      className = "completed";
+    }
 
-showMessage(
-"Account created successfully."
-);
+    if (
+      value === "failed" ||
+      value === "rejected"
+    ) {
+      className = "failed";
+    }
 
-}catch(error){
+    if (
+      value === "simulated" ||
+      value === "approved_for_payment"
+    ) {
+      className = "simulated";
+    }
 
-showMessage(error.message);
+    return `
+      <span class="badge ${className}">
+        ${status}
+      </span>
+    `;
 
-}
+  }
 
-}
 
-async function login(){
+  /* =====================================================
+     AUTH TABS
+  ===================================================== */
 
-try{
+  function showLogin() {
 
-const data =
-await api("/api/login",{
+    document
+      .getElementById("loginForm")
+      .classList.remove("hidden");
 
-method:"POST",
+    document
+      .getElementById("registerForm")
+      .classList.add("hidden");
 
-body:JSON.stringify({
+    document
+      .getElementById("loginTab")
+      .classList.add("active");
 
-email:
-document.getElementById("loginEmail").value,
+    document
+      .getElementById("registerTab")
+      .classList.remove("active");
 
-password:
-document.getElementById("loginPassword").value
+  }
 
-})
 
-});
+  function showRegister() {
 
-token = data.token;
+    document
+      .getElementById("loginForm")
+      .classList.add("hidden");
 
-localStorage.setItem(
-"vertexToken",
-token
-);
+    document
+      .getElementById("registerForm")
+      .classList.remove("hidden");
 
-currentUser = data.user;
+    document
+      .getElementById("loginTab")
+      .classList.remove("active");
 
-openApp();
+    document
+      .getElementById("registerTab")
+      .classList.add("active");
 
-showMessage(
-"Login successful."
-);
+  }
 
-}catch(error){
 
-showMessage(error.message);
+  /* =====================================================
+     REGISTER
+  ===================================================== */
 
-}
+  document
+    .getElementById("registerForm")
+    .addEventListener("submit", async function(event) {
 
-}
+      event.preventDefault();
 
-async function loadUser(){
+      const name =
+        document.getElementById("registerName").value.trim();
 
-if(!token){
+      const email =
+        document.getElementById("registerEmail").value.trim();
 
-return;
+      let phone =
+        document.getElementById("registerPhone").value.trim();
 
-}
+      const password =
+        document.getElementById("registerPassword").value;
 
-try{
+      if (phone.startsWith("0")) {
+        phone = "254" + phone.substring(1);
+      }
 
-const data =
-await api("/api/me");
+      try {
 
-currentUser =
-data.user;
+        const data = await api(
+          "/api/register",
+          {
+            method: "POST",
+            headers: apiHeaders(),
+            body: JSON.stringify({
+              name,
+              email,
+              phone,
+              password
+            })
+          }
+        );
 
-openApp();
+        userToken = data.token;
 
-}catch(error){
+        localStorage.setItem(
+          "vertexUserToken",
+          userToken
+        );
 
-localStorage.removeItem(
-"vertexToken"
-);
+        currentUser = data.user;
 
-token = null;
+        showDashboard();
 
-}
+      } catch (error) {
 
-}
+        showMessage(
+          "authMessage",
+          error.message,
+          false
+        );
 
-function openApp(){
+      }
 
-document
-.getElementById("auth")
-.classList.add("hidden");
+    });
 
-document
-.getElementById("app")
-.classList.remove("hidden");
 
-document
-.getElementById("headerUser")
-.innerText =
-currentUser.name;
+  /* =====================================================
+     LOGIN
+  ===================================================== */
 
-updateBalance();
+  document
+    .getElementById("loginForm")
+    .addEventListener("submit", async function(event) {
 
-loadTransactions();
+      event.preventDefault();
 
-loadTrades();
+      const email =
+        document.getElementById("loginEmail").value.trim();
 
-updateMarket();
+      const password =
+        document.getElementById("loginPassword").value;
 
-}
+      try {
 
-function updateBalance(){
+        const data = await api(
+          "/api/login",
+          {
+            method: "POST",
+            headers: apiHeaders(),
+            body: JSON.stringify({
+              email,
+              password
+            })
+          }
+        );
 
-if(!currentUser){
+        userToken = data.token;
 
-return;
+        localStorage.setItem(
+          "vertexUserToken",
+          userToken
+        );
 
-}
+        currentUser = data.user;
 
-document
-.getElementById("balance")
-.innerText =
-"KES " +
-Number(currentUser.balance)
-.toLocaleString();
+        showDashboard();
 
-document
-.getElementById("walletBalance")
-.innerText =
-"KES " +
-Number(currentUser.balance)
-.toLocaleString();
+      } catch (error) {
 
-document
-.getElementById("userName")
-.innerText =
-currentUser.name;
+        showMessage(
+          "authMessage",
+          error.message,
+          false
+        );
 
-}
+      }
 
-async function refreshUser(){
+    });
 
-const data =
-await api("/api/me");
 
-currentUser =
-data.user;
+  /* =====================================================
+     SHOW DASHBOARD
+  ===================================================== */
 
-updateBalance();
+  function showDashboard() {
 
-}
+    document
+      .getElementById("authScreen")
+      .classList.add("hidden");
 
-async function deposit(){
+    document
+      .getElementById("adminScreen")
+      .classList.add("hidden");
 
-try{
+    document
+      .getElementById("dashboardScreen")
+      .classList.remove("hidden");
 
-const amount =
-document
-.getElementById("depositAmount")
-.value;
+    updateUserInterface();
 
-const phone =
-document
-.getElementById("depositPhone")
-.value;
+    loadTransactions();
 
-const data =
-await api("/api/mpesa/deposit",{
+    loadTrades();
 
-method:"POST",
+    loadMarket();
 
-body:JSON.stringify({
-amount,
-phone
-})
+    setTimeout(loadMarket, 1000);
 
-});
+  }
 
-showMessage(
-data.message
-);
 
-}catch(error){
+  function updateUserInterface() {
 
-showMessage(
-error.message
-);
+    if (!currentUser) return;
 
-}
+    document.getElementById("userName").textContent =
+      currentUser.name;
 
-}
+    document.getElementById("userEmail").textContent =
+      currentUser.email;
 
-async function withdraw(){
+    document.getElementById("accountPhone").textContent =
+      currentUser.phone || "---";
 
-try{
+    document.getElementById("balance").textContent =
+      formatMoney(currentUser.balance);
 
-const amount =
-document
-.getElementById("withdrawAmount")
-.value;
+    document.getElementById("walletCard").textContent =
+      formatMoney(currentUser.balance);
 
-const phone =
-document
-.getElementById("withdrawPhone")
-.value;
+    if (!document.getElementById("depositPhone").value) {
+      document.getElementById("depositPhone").value =
+        currentUser.phone || "";
+    }
 
-const data =
-await api("/api/withdraw",{
+    if (!document.getElementById("withdrawPhone").value) {
+      document.getElementById("withdrawPhone").value =
+        currentUser.phone || "";
+    }
 
-method:"POST",
+  }
 
-body:JSON.stringify({
-amount,
-phone
-})
 
-});
+  /* =====================================================
+     REFRESH ACCOUNT
+  ===================================================== */
 
-await refreshUser();
+  async function refreshAccount() {
 
-await loadTransactions();
+    try {
 
-showMessage(
-data.message
-);
+      const data = await api(
+        "/api/me",
+        {
+          headers: apiHeaders(userToken)
+        }
+      );
 
-}catch(error){
+      currentUser = data.user;
 
-showMessage(
-error.message
-);
+      updateUserInterface();
 
-}
+      await loadTransactions();
 
-}
+      await loadTrades();
 
-async function trade(side){
+    } catch (error) {
 
-try{
+      if (
+        error.message.toLowerCase().includes("log in")
+      ) {
+        logout();
+      }
 
-const amount =
-document
-.getElementById("tradeAmount")
-.value;
+    }
 
-const data =
-await api("/api/trade",{
+  }
 
-method:"POST",
 
-body:JSON.stringify({
-side,
-amount
-})
+  /* =====================================================
+     LOGOUT
+  ===================================================== */
 
-});
+  async function logout() {
 
-await refreshUser();
+    try {
 
-await loadTransactions();
+      await api(
+        "/api/logout",
+        {
+          method: "POST",
+          headers: apiHeaders(userToken)
+        }
+      );
 
-await loadTrades();
+    } catch {}
 
-showMessage(
-data.message
-);
+    localStorage.removeItem("vertexUserToken");
 
-}catch(error){
+    userToken = "";
 
-showMessage(
-error.message
-);
+    currentUser = null;
 
-}
+    document
+      .getElementById("dashboardScreen")
+      .classList.add("hidden");
 
-}
+    document
+      .getElementById("adminScreen")
+      .classList.add("hidden");
 
-async function loadTransactions(){
+    document
+      .getElementById("authScreen")
+      .classList.remove("hidden");
 
-try{
+    showLogin();
 
-const data =
-await api("/api/transactions");
+  }
 
-const container =
-document.getElementById(
-"transactions"
-);
 
-if(data.transactions.length === 0){
+  /* =====================================================
+     M-PESA DEPOSIT
+  ===================================================== */
 
-container.innerHTML =
-"<p>No transactions yet.</p>";
+  async function depositMoney() {
 
-return;
+    const amount =
+      Number(
+        document.getElementById("depositAmount").value
+      );
 
-}
+    let phone =
+      document.getElementById("depositPhone").value.trim();
 
-container.innerHTML = `
+    if (phone.startsWith("0")) {
+      phone = "254" + phone.substring(1);
+    }
 
-<table>
+    if (!amount || amount < 1) {
 
-<tr>
+      showMessage(
+        "walletMessage",
+        "Enter a valid deposit amount.",
+        false
+      );
 
-<th>Type</th>
-<th>Amount</th>
-<th>Status</th>
+      return;
 
-</tr>
+    }
 
-${data.transactions.map(t => `
+    if (!/^254\d{9}$/.test(phone)) {
 
-<tr>
+      showMessage(
+        "walletMessage",
+        "Use Kenyan format 2547XXXXXXXX.",
+        false
+      );
 
-<td>${t.type}</td>
+      return;
 
-<td>KES ${Number(t.amount).toLocaleString()}</td>
+    }
 
-<td>${t.status}</td>
+    showMessage(
+      "walletMessage",
+      "Starting M-Pesa payment...",
+      true
+    );
 
-</tr>
+    try {
 
-`).join("")}
+      const data = await api(
+        "/api/mpesa/deposit",
+        {
+          method: "POST",
+          headers: apiHeaders(userToken),
+          body: JSON.stringify({
+            amount,
+            phone
+          })
+        }
+      );
 
-</table>
+      showMessage(
+        "walletMessage",
+        data.message ||
+        "STK Push sent. Complete the payment on your phone.",
+        true
+      );
 
-`;
+      document.getElementById("depositAmount").value = "";
 
-}catch(error){
+      /*
+        The callback from Safaricom updates the balance.
+        Refresh shortly after completing the STK payment.
+      */
 
-console.log(error);
+      setTimeout(refreshAccount, 5000);
+      setTimeout(refreshAccount, 15000);
 
-}
+    } catch (error) {
 
-}
+      showMessage(
+        "walletMessage",
+        error.message,
+        false
+      );
 
-async function loadTrades(){
+    }
 
-try{
+  }
 
-const data =
-await api("/api/trades");
 
-const container =
-document.getElementById(
-"trades"
-);
+  /* =====================================================
+     WITHDRAWAL
+  ===================================================== */
 
-if(data.trades.length === 0){
+  async function withdrawMoney() {
 
-container.innerHTML =
-"<p>No trades yet.</p>";
+    const amount =
+      Number(
+        document.getElementById("withdrawAmount").value
+      );
 
-return;
+    let phone =
+      document.getElementById("withdrawPhone").value.trim();
 
-}
+    if (phone.startsWith("0")) {
+      phone = "254" + phone.substring(1);
+    }
 
-container.innerHTML = `
+    if (!amount || amount <= 0) {
 
-<table>
+      showMessage(
+        "walletMessage",
+        "Enter a valid withdrawal amount.",
+        false
+      );
 
-<tr>
+      return;
 
-<th>Side</th>
-<th>Amount</th>
-<th>Price</th>
-<th>Status</th>
+    }
 
-</tr>
+    if (!/^254\d{9}$/.test(phone)) {
 
-${data.trades.map(t => `
+      showMessage(
+        "walletMessage",
+        "Use Kenyan format 2547XXXXXXXX.",
+        false
+      );
 
-<tr>
+      return;
 
-<td>${t.side}</td>
+    }
 
-<td>KES ${Number(t.amount).toLocaleString()}</td>
+    try {
 
-<td>${t.price}</td>
+      const data = await api(
+        "/api/withdraw",
+        {
+          method: "POST",
+          headers: apiHeaders(userToken),
+          body: JSON.stringify({
+            amount,
+            phone
+          })
+        }
+      );
 
-<td>${t.status}</td>
+      showMessage(
+        "walletMessage",
+        data.message ||
+        "Withdrawal request submitted.",
+        true
+      );
 
-</tr>
+      document.getElementById("withdrawAmount").value = "";
 
-`).join("")}
+      await refreshAccount();
 
-</table>
+    } catch (error) {
 
-`;
+      showMessage(
+        "walletMessage",
+        error.message,
+        false
+      );
 
-}catch(error){
+    }
 
-console.log(error);
+  }
 
-}
 
-}
+  /* =====================================================
+     MARKET
+  ===================================================== */
 
-async function updateMarket(){
+  async function loadMarket() {
 
-try{
+    try {
 
-const data =
-await fetch("/api/market")
-.then(r => r.json());
+      const data =
+        await api("/api/market");
 
-document
-.getElementById("marketPrice")
-.innerText =
-data.price;
+      const price =
+        Number(data.price).toFixed(2);
 
-document
-.getElementById("tradePrice")
-.innerText =
-data.price;
+      document.getElementById("marketPrice")
+        .textContent = price;
 
-}catch(error){
+      document.getElementById("tradePrice")
+        .textContent = price;
 
-console.log(error);
+    } catch {}
 
-}
+  }
 
-}
 
-function showPage(page){
+  setInterval(loadMarket, 3000);
 
-document
-.getElementById("dashboardPage")
-.classList.add("hidden");
 
-document
-.getElementById("walletPage")
-.classList.add("hidden");
+  /* =====================================================
+     TRADE
+  ===================================================== */
 
-document
-.getElementById("tradePage")
-.classList.add("hidden");
+  async function trade(side) {
 
-document
-.getElementById(page + "Page")
-.classList.remove("hidden");
+    const amount =
+      Number(
+        document.getElementById("tradeAmount").value
+      );
 
-}
+    if (!amount || amount <= 0) {
 
-async function logout(){
+      showMessage(
+        "tradeMessage",
+        "Enter a valid trade amount.",
+        false
+      );
 
-try{
+      return;
 
-await api("/api/logout",{
-method:"POST"
-});
+    }
 
-}catch(error){}
+    try {
 
-localStorage.removeItem(
-"vertexToken"
-);
+      const data = await api(
+        "/api/trade",
+        {
+          method: "POST",
+          headers: apiHeaders(userToken),
+          body: JSON.stringify({
+            side,
+            amount
+          })
+        }
+      );
 
-token = null;
+      showMessage(
+        "tradeMessage",
+        data.message ||
+        "Demo trade executed.",
+        true
+      );
 
-location.reload();
+      document.getElementById("tradeAmount").value = "";
 
-}
+      await refreshAccount();
 
-setInterval(updateMarket,3000);
+    } catch (error) {
 
-setInterval(async () => {
+      showMessage(
+        "tradeMessage",
+        error.message,
+        false
+      );
 
-if(token){
+    }
 
-try{
+  }
 
-await refreshUser();
 
-}catch(error){}
+  /* =====================================================
+     TRANSACTIONS
+  ===================================================== */
 
-}
+  async function loadTransactions() {
 
-},10000);
+    try {
 
-loadUser();
+      const data =
+        await api(
+          "/api/transactions",
+          {
+            headers: apiHeaders(userToken)
+          }
+        );
+
+      const table =
+        document.getElementById("transactionsTable");
+
+      if (!data.transactions.length) {
+
+        table.innerHTML = `
+          <tr>
+            <td colspan="4">
+              No transactions yet.
+            </td>
+          </tr>
+        `;
+
+        return;
+
+      }
+
+      table.innerHTML =
+        data.transactions.map(tx => `
+
+          <tr>
+
+            <td>${tx.type}</td>
+
+            <td>
+              KES ${formatMoney(tx.amount)}
+            </td>
+
+            <td>
+              ${badge(tx.status)}
+            </td>
+
+            <td>
+              ${formatDate(tx.createdAt)}
+            </td>
+
+          </tr>
+
+        `).join("");
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  }
+
+
+  /* =====================================================
+     TRADES
+  ===================================================== */
+
+  async function loadTrades() {
+
+    try {
+
+      const data =
+        await api(
+          "/api/trades",
+          {
+            headers: apiHeaders(userToken)
+          }
+        );
+
+      const table =
+        document.getElementById("tradesTable");
+
+      if (!data.trades.length) {
+
+        table.innerHTML = `
+          <tr>
+            <td colspan="5">
+              No trades yet.
+            </td>
+          </tr>
+        `;
+
+        return;
+
+      }
+
+      table.innerHTML =
+        data.trades.map(trade => `
+
+          <tr>
+
+            <td class="${trade.side === "BUY" ? "green" : "red"}">
+              ${trade.side}
+            </td>
+
+            <td>
+              KES ${formatMoney(trade.amount)}
+            </td>
+
+            <td>
+              ${Number(trade.price).toFixed(2)}
+            </td>
+
+            <td>
+              ${badge(trade.status)}
+            </td>
+
+            <td>
+              ${formatDate(trade.createdAt)}
+            </td>
+
+          </tr>
+
+        `).join("");
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  }
+
+
+  /* =====================================================
+     ADMIN LOGIN MODAL
+  ===================================================== */
+
+  function showAdminLogin() {
+
+    document
+      .getElementById("adminModal")
+      .classList.remove("hidden");
+
+  }
+
+
+  function closeAdminLogin() {
+
+    document
+      .getElementById("adminModal")
+      .classList.add("hidden");
+
+  }
+
+
+  async function adminLogin() {
+
+    const username =
+      document.getElementById("adminUsername").value.trim();
+
+    const password =
+      document.getElementById("adminPassword").value;
+
+    try {
+
+      const data =
+        await api(
+          "/api/admin/login",
+          {
+            method: "POST",
+            headers: apiHeaders(),
+            body: JSON.stringify({
+              username,
+              password
+            })
+          }
+        );
+
+      adminToken = data.token;
+
+      localStorage.setItem(
+        "vertexAdminToken",
+        adminToken
+      );
+
+      closeAdminLogin();
+
+      document
+        .getElementById("dashboardScreen")
+        .classList.add("hidden");
+
+      document
+        .getElementById("authScreen")
+        .classList.add("hidden");
+
+      document
+        .getElementById("adminScreen")
+        .classList.remove("hidden");
+
+      loadAdminDashboard();
+
+    } catch (error) {
+
+      showMessage(
+        "adminLoginMessage",
+        error.message,
+        false
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     ADMIN DASHBOARD
+  ===================================================== */
+
+  async function loadAdminDashboard() {
+
+    try {
+
+      const data =
+        await api(
+          "/api/admin/dashboard",
+          {
+            headers: apiHeaders(adminToken)
+          }
+        );
+
+      document.getElementById("statUsers")
+        .textContent =
+        data.statistics.users;
+
+      document.getElementById("statDeposits")
+        .textContent =
+        "KES " +
+        formatMoney(
+          data.statistics.totalDeposits
+        );
+
+      document.getElementById("statWithdrawals")
+        .textContent =
+        data.statistics.pendingWithdrawals;
+
+      document.getElementById("statTrades")
+        .textContent =
+        data.statistics.totalTrades;
+
+
+      /* USERS */
+
+      const usersTable =
+        document.getElementById("usersTable");
+
+      if (!data.users.length) {
+
+        usersTable.innerHTML = `
+          <tr>
+            <td colspan="5">
+              No users yet.
+            </td>
+          </tr>
+        `;
+
+      } else {
+
+        usersTable.innerHTML =
+          data.users.map(user => `
+
+            <tr>
+
+              <td>${escapeHtml(user.name)}</td>
+
+              <td>${escapeHtml(user.email)}</td>
+
+              <td>${escapeHtml(user.phone)}</td>
+
+              <td>
+                KES ${formatMoney(user.balance)}
+              </td>
+
+              <td>
+                ${formatDate(user.createdAt)}
+              </td>
+
+            </tr>
+
+          `).join("");
+
+      }
+
+
+      /* WITHDRAWALS */
+
+      const withdrawalTable =
+        document.getElementById(
+          "withdrawalsTable"
+        );
+
+      if (!data.withdrawals.length) {
+
+        withdrawalTable.innerHTML = `
+          <tr>
+            <td colspan="6">
+              No withdrawal requests.
+            </td>
+          </tr>
+        `;
+
+      } else {
+
+        withdrawalTable.innerHTML =
+          data.withdrawals.map(w => `
+
+            <tr>
+
+              <td>
+                ${findUserName(
+                  data.users,
+                  w.userId
+                )}
+              </td>
+
+              <td>
+                ${escapeHtml(w.phone)}
+              </td>
+
+              <td>
+                KES ${formatMoney(w.amount)}
+              </td>
+
+              <td>
+                ${badge(w.status)}
+              </td>
+
+              <td>
+                ${formatDate(w.createdAt)}
+              </td>
+
+              <td>
+
+                ${
+                  w.status === "PENDING"
+
+                  ? `
+
+                    <div class="admin-actions">
+
+                      <button
+                        class="approve"
+                        onclick="approveWithdrawal('${w.id}')"
+                      >
+                        Approve
+                      </button>
+
+                      <button
+                        class="reject"
+                        onclick="rejectWithdrawal('${w.id}')"
+                      >
+                        Reject
+                      </button>
+
+                    </div>
+
+                  `
+
+                  : "Processed"
+
+                }
+
+              </td>
+
+            </tr>
+
+          `).join("");
+
+      }
+
+    } catch (error) {
+
+      showMessage(
+        "adminMessage",
+        error.message,
+        false
+      );
+
+      if (
+        error.message
+          .toLowerCase()
+          .includes("admin")
+      ) {
+
+        adminLogout();
+
+      }
+
+    }
+
+  }
+
+
+  function findUserName(users, userId) {
+
+    const user =
+      users.find(u => u.id === userId);
+
+    return user
+      ? escapeHtml(user.name)
+      : "Unknown";
+
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  }
+
+
+  /* =====================================================
+     ADMIN APPROVE WITHDRAWAL
+  ===================================================== */
+
+  async function approveWithdrawal(id) {
+
+    if (
+      !confirm(
+        "Approve this withdrawal for payment processing?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+
+      const data =
+        await api(
+          "/api/admin/withdrawals/" +
+          encodeURIComponent(id) +
+          "/approve",
+          {
+            method: "POST",
+            headers: apiHeaders(adminToken)
+          }
+        );
+
+      showMessage(
+        "adminMessage",
+        data.message,
+        true
+      );
+
+      loadAdminDashboard();
+
+    } catch (error) {
+
+      showMessage(
+        "adminMessage",
+        error.message,
+        false
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     ADMIN REJECT WITHDRAWAL
+  ===================================================== */
+
+  async function rejectWithdrawal(id) {
+
+    if (
+      !confirm(
+        "Reject this withdrawal and return the balance to the user?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+
+      const data =
+        await api(
+          "/api/admin/withdrawals/" +
+          encodeURIComponent(id) +
+          "/reject",
+          {
+            method: "POST",
+            headers: apiHeaders(adminToken)
+          }
+        );
+
+      showMessage(
+        "adminMessage",
+        data.message,
+        true
+      );
+
+      loadAdminDashboard();
+
+    } catch (error) {
+
+      showMessage(
+        "adminMessage",
+        error.message,
+        false
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     ADMIN LOGOUT
+  ===================================================== */
+
+  function adminLogout() {
+
+    localStorage.removeItem(
+      "vertexAdminToken"
+    );
+
+    adminToken = "";
+
+    document
+      .getElementById("adminScreen")
+      .classList.add("hidden");
+
+    document
+      .getElementById("authScreen")
+      .classList.remove("hidden");
+
+    showLogin();
+
+  }
+
+
+  /* =====================================================
+     AUTO LOGIN
+  ===================================================== */
+
+  async function initialize() {
+
+    if (!userToken) {
+
+      document
+        .getElementById("authScreen")
+        .classList.remove("hidden");
+
+      return;
+
+    }
+
+    try {
+
+      const data =
+        await api(
+          "/api/me",
+          {
+            headers: apiHeaders(userToken)
+          }
+        );
+
+      currentUser = data.user;
+
+      showDashboard();
+
+    } catch {
+
+      localStorage.removeItem(
+        "vertexUserToken"
+      );
+
+      userToken = "";
+
+    }
+
+  }
+
+
+  initialize();
 
 </script>
 
 </body>
-
-</html>
-`;
-
-/* =========================================================
-   SERVE WEBSITE
-========================================================= */
-
-app.get("/", (req, res) => {
-  res.send(HTML);
-});
-
-/* =========================================================
-   START SERVER
-========================================================= */
-
-app.listen(PORT, () => {
-  console.log(
-    `Vertex FX running on port ${PORT}`
-  );
-});
+         </html>

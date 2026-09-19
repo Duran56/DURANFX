@@ -1,56 +1,218 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Vertex FX — Client Portal</title>
+<title>Vertex FX</title>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#06111d;color:#fff;font-family:Arial,sans-serif}
-.wrap{max-width:1100px;margin:auto;padding:16px}
-.top{display:flex;justify-content:space-between;align-items:center;padding:8px 0 18px}
-.brand{font-size:23px;font-weight:800}.brand span{color:#55b9ff}
-.badge{font-size:10px;padding:6px 9px;border:1px solid #2b4963;border-radius:20px;color:#9eb3c7}
-.nav{display:flex;gap:6px;overflow:auto;margin-bottom:18px}
-.nav button{background:#0b1928;color:#9eb3c7;border:1px solid #1a3046;border-radius:8px;padding:10px 13px;white-space:nowrap}
-.nav button.on{background:#123453;color:#fff}
-.hero{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:18px}
-.hero h1{margin:4px 0;font-size:28px}.muted{color:#8197ab;font-size:13px}
-.primary{background:#1688e8;border:0;color:white;border-radius:9px;padding:11px 15px;font-weight:700}
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.card,.panel{background:#0b1928;border:1px solid #1a3046;border-radius:12px}
-.card{padding:14px}.card small{color:#8298ac}
-.card strong{display:block;font-size:19px;margin-top:7px}
-.card em{font-size:10px;color:#60788d;font-style:normal}
-.grid{display:grid;grid-template-columns:1.55fr 1fr;gap:12px;margin-top:12px}
-.panel{padding:14px;margin-bottom:12px}
-.head{display:flex;justify-content:space-between;align-items:center}
-.head h2{font-size:16px;margin:0}.price{font-size:19px;font-weight:bold}
-.chart{height:230px;margin-top:10px}
-.chart svg{width:100%;height:205px}
-.axis{display:flex;justify-content:space-between;color:#587086;font-size:10px}
-label{display:block;color:#91a7ba;font-size:11px;margin-top:12px}
-input,select{width:100%;margin-top:5px;padding:11px;border-radius:7px;border:1px solid #274058;background:#071522;color:#fff;outline:0}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}
-.actions button{border:0;color:white;padding:11px;border-radius:8px;font-weight:bold}
-.sell{background:#b94458}.buy{background:#1688e8}
-.notice{background:#0a1c2c;border:1px solid #24445e;border-radius:9px;padding:11px;color:#a8bfd1;font-size:11px;line-height:1.5;margin-top:10px}
-.rows{margin-top:10px}
-.row{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;padding:11px 2px;border-top:1px solid #172c40;font-size:12px}
-.th{color:#6e8599;font-size:10px}
-.up{color:#52c48b}.down{color:#ec7180}
-.modal{display:none;position:fixed;inset:0;background:#000b;align-items:center;justify-content:center;padding:18px}
-.modalBox{background:#0b1928;border:1px solid #29445d;border-radius:14px;padding:18px;max-width:420px;width:100%}
-.close{float:right;background:none;border:0;color:#9eb3c7;font-size:20px}
-footer{text-align:center;color:#516a80;font-size:10px;padding:15px}
+body{
+  margin:0;
+  background:#06111d;
+  color:#fff;
+  font-family:Arial,sans-serif
+}
+.wrap{
+  max-width:1100px;
+  margin:auto;
+  padding:14px
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 0 16px
+}
+.brand{
+  font-size:24px;
+  font-weight:800
+}
+.brand span{color:#55b9ff}
+.badge{
+  font-size:10px;
+  border:1px solid #29455d;
+  padding:6px 9px;
+  border-radius:20px;
+  color:#9fb5c8
+}
+nav{
+  display:flex;
+  gap:6px;
+  overflow:auto;
+  margin-bottom:16px
+}
+nav button{
+  white-space:nowrap;
+  background:#0b1928;
+  color:#a1b5c6;
+  border:1px solid #1b3044;
+  border-radius:8px;
+  padding:10px 13px
+}
+nav button.active{
+  background:#123553;
+  color:#fff
+}
+.hero{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  align-items:center;
+  margin-bottom:16px
+}
+h1{
+  font-size:27px;
+  margin:5px 0
+}
+.muted{
+  color:#8298ab;
+  font-size:13px
+}
+.primary{
+  background:#1688e8;
+  color:#fff;
+  border:0;
+  border-radius:8px;
+  padding:11px 15px;
+  font-weight:700
+}
+.cards{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:9px
+}
+.card,.panel{
+  background:#0b1928;
+  border:1px solid #1a3045;
+  border-radius:12px
+}
+.card{
+  padding:14px
+}
+.card small{color:#8398aa}
+.card strong{
+  display:block;
+  font-size:19px;
+  margin-top:7px
+}
+.grid{
+  display:grid;
+  grid-template-columns:1.55fr 1fr;
+  gap:12px;
+  margin-top:12px
+}
+.panel{
+  padding:14px;
+  margin-bottom:12px
+}
+.head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center
+}
+.head h2{
+  font-size:16px;
+  margin:0
+}
+.price{
+  font-size:19px;
+  font-weight:bold
+}
+.chart{
+  height:220px;
+  margin-top:10px
+}
+.chart svg{
+  width:100%;
+  height:195px
+}
+.axis{
+  display:flex;
+  justify-content:space-between;
+  color:#5e7589;
+  font-size:10px
+}
+label{
+  display:block;
+  color:#91a7ba;
+  font-size:11px;
+  margin-top:12px
+}
+input,select{
+  width:100%;
+  margin-top:5px;
+  padding:11px;
+  background:#071522;
+  color:#fff;
+  border:1px solid #294158;
+  border-radius:7px
+}
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:15px
+}
+.actions button{
+  padding:11px;
+  border:0;
+  border-radius:8px;
+  color:#fff;
+  font-weight:bold
+}
+.sell{background:#b94458}
+.buy{background:#1688e8}
+.notice{
+  background:#0a1c2c;
+  border:1px solid #24445e;
+  border-radius:9px;
+  padding:11px;
+  color:#a9bfce;
+  font-size:11px;
+  line-height:1.5;
+  margin-top:10px
+}
+.row{
+  display:grid;
+  grid-template-columns:1.5fr 1fr 1fr 1fr;
+  padding:11px 2px;
+  border-top:1px solid #172c40;
+  font-size:12px
+}
+.th{
+  color:#70869a;
+  font-size:10px
+}
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#000b;
+  align-items:center;
+  justify-content:center;
+  padding:16px
+}
+.box{
+  background:#0b1928;
+  border:1px solid #29455d;
+  border-radius:14px;
+  padding:18px;
+  max-width:430px;
+  width:100%
+}
+.close{
+  float:right;
+  background:none;
+  border:0;
+  color:#9eb3c7;
+  font-size:20px
+}
 @media(max-width:760px){
-.cards{grid-template-columns:1fr 1fr}
-.grid{grid-template-columns:1fr}
-.hero{align-items:flex-start}
-.hero h1{font-size:23px}
-.wrap{padding:12px 9px}
-.row{grid-template-columns:1.5fr 1fr 1fr 1fr;font-size:11px}
+  .cards{grid-template-columns:1fr 1fr}
+  .grid{grid-template-columns:1fr}
+  .hero{align-items:flex-start}
+  h1{font-size:23px}
 }
 </style>
 </head>
@@ -60,54 +222,51 @@ footer{text-align:center;color:#516a80;font-size:10px;padding:15px}
 <div class="wrap">
 
 <header class="top">
-<div class="brand">Vertex <span>FX</span></div>
-<div class="badge">CLIENT PORTAL</div>
+  <div class="brand">Vertex <span>FX</span></div>
+  <div class="badge">CLIENT PORTAL</div>
 </header>
 
-<nav class="nav">
-<button class="on">Dashboard</button>
-<button>Trade</button>
-<button>Markets</button>
-<button>Positions</button>
-<button>Transactions</button>
-<button onclick="openModal('deposit')">Deposit</button>
-<button onclick="openModal('withdraw')">Withdraw</button>
+<nav>
+  <button class="active">Dashboard</button>
+  <button>Trade</button>
+  <button>Markets</button>
+  <button>Positions</button>
+  <button>Transactions</button>
+  <button onclick="deposit()">Deposit</button>
+  <button onclick="withdraw()">Withdraw</button>
 </nav>
 
 <section class="hero">
-<div>
-<div class="muted">WELCOME TO VERTEXFX</div>
-<h1>Trade smarter. Stay in control.</h1>
-<div class="muted">Your trading account and transaction centre.</div>
-</div>
-<button class="primary" onclick="openModal('account')">Account</button>
+  <div>
+    <div class="muted">WELCOME TO VERTEXFX</div>
+    <h1>Trade smarter. Stay in control.</h1>
+    <div class="muted">Secure trading account portal.</div>
+  </div>
+
+  <button class="primary" onclick="account()">Account</button>
 </section>
 
 <div class="cards">
 
-<div class="card">
-<small>Account Balance</small>
-<strong id="balance">$0.00</strong>
-<em>Account ledger</em>
-</div>
+  <div class="card">
+    <small>Account Balance</small>
+    <strong id="balance">$0.00</strong>
+  </div>
 
-<div class="card">
-<small>Equity</small>
-<strong id="equity">$0.00</strong>
-<em>Balance + open P/L</em>
-</div>
+  <div class="card">
+    <small>Equity</small>
+    <strong id="equity">$0.00</strong>
+  </div>
 
-<div class="card">
-<small>Free Margin</small>
-<strong id="margin">$0.00</strong>
-<em>Available margin</em>
-</div>
+  <div class="card">
+    <small>Free Margin</small>
+    <strong id="margin">$0.00</strong>
+  </div>
 
-<div class="card">
-<small>Open Positions</small>
-<strong id="positions">0</strong>
-<em>Active trades</em>
-</div>
+  <div class="card">
+    <small>Open Positions</small>
+    <strong id="positions">0</strong>
+  </div>
 
 </div>
 
@@ -117,68 +276,76 @@ footer{text-align:center;color:#516a80;font-size:10px;padding:15px}
 
 <div class="panel">
 
-<div class="head">
+  <div class="head">
 
-<div>
-<h2>EUR/USD</h2>
-<p class="muted">Market data connection</p>
-</div>
+    <div>
+      <h2>EUR/USD</h2>
+      <p class="muted">Market data</p>
+    </div>
 
-<div class="price" id="price">1.16834</div>
+    <div class="price">1.16834</div>
 
-</div>
+  </div>
 
-<div class="chart">
+  <div class="chart">
 
-<svg viewBox="0 0 700 205" preserveAspectRatio="none">
+    <svg viewBox="0 0 700 205" preserveAspectRatio="none">
 
-<polyline
-fill="none"
-stroke="#55b9ff"
-stroke-width="3"
-points="0,165 55,150 100,158 145,120 190,135 235,95 280,110 325,80 370,105 415,70 460,88 505,62 550,76 595,48 640,67 700,38"
-/>
+      <polyline
+        fill="none"
+        stroke="#55b9ff"
+        stroke-width="3"
+        points="
+        0,165
+        55,150
+        100,158
+        145,120
+        190,135
+        235,95
+        280,110
+        325,80
+        370,105
+        415,70
+        460,88
+        505,62
+        550,76
+        595,48
+        640,67
+        700,38
+        "
+      />
 
-</svg>
+    </svg>
 
-<div class="axis">
-<span>09:00</span>
-<span>12:00</span>
-<span>15:00</span>
-<span>18:00</span>
-</div>
+    <div class="axis">
+      <span>09:00</span>
+      <span>12:00</span>
+      <span>15:00</span>
+      <span>18:00</span>
+    </div>
 
-</div>
+  </div>
 
 </div>
 
 <div class="panel">
 
-<div class="head">
+  <div class="head">
 
-<div>
-<h2>Open Positions</h2>
-<p class="muted">Orders connected to the configured execution provider.</p>
-</div>
+    <div>
+      <h2>Open Positions</h2>
+      <p class="muted">
+        Live positions appear here after broker execution.
+      </p>
+    </div>
 
-</div>
+  </div>
 
-<div class="rows">
-
-<div class="row th">
-<span>Symbol</span>
-<span>Type</span>
-<span>Lots</span>
-<span>P/L</span>
-</div>
-
-<div id="positionRows">
-<div class="muted" style="padding:15px 0">
-No open positions.
-</div>
-</div>
-
-</div>
+  <div id="positionsTable">
+    <div class="muted" style="padding:15px 0">
+      No open positions.
+    </div>
+  </div>
 
 </div>
 
@@ -188,66 +355,82 @@ No open positions.
 
 <div class="panel">
 
-<div class="head">
+  <div class="head">
 
-<div>
-<h2>Market Order</h2>
-<p class="muted">Trading interface</p>
-</div>
+    <div>
+      <h2>Market Order</h2>
+      <p class="muted">Broker execution connection</p>
+    </div>
 
-</div>
+  </div>
 
-<label>
-Volume (Lots)
-<input id="lots" type="number" value="0.01" min="0.01" step="0.01">
-</label>
+  <label>
+    Volume (Lots)
+    <input
+      id="lots"
+      type="number"
+      min="0.01"
+      step="0.01"
+      value="0.01"
+    >
+  </label>
 
-<label>
-Take Profit (Optional)
-<input id="tp" placeholder="e.g. 1.1720">
-</label>
+  <label>
+    Stop Loss
+    <input id="sl" placeholder="Optional">
+  </label>
 
-<label>
-Stop Loss (Optional)
-<input id="sl" placeholder="e.g. 1.1650">
-</label>
+  <label>
+    Take Profit
+    <input id="tp" placeholder="Optional">
+  </label>
 
-<div class="actions">
+  <div class="actions">
 
-<button class="sell" onclick="placeOrder('SELL')">
-SELL
-</button>
+    <button class="sell" onclick="trade('SELL')">
+      SELL
+    </button>
 
-<button class="buy" onclick="placeOrder('BUY')">
-BUY
-</button>
+    <button class="buy" onclick="trade('BUY')">
+      BUY
+    </button>
 
-</div>
+  </div>
 
-<div class="notice">
-Orders are prepared through this interface. Live execution requires connection to the approved broker API.
-</div>
+  <div class="notice">
+    Live orders are enabled only after an approved broker API is configured on the secure backend.
+  </div>
 
 </div>
 
 <div class="panel">
 
-<div class="head">
-<div><h2>Account Actions</h2></div>
-</div>
+  <h2 style="font-size:16px">
+    Funding
+  </h2>
 
-<button
-class="primary"
-style="width:100%;margin-top:10px"
-onclick="openModal('deposit')">
-Deposit Funds
-</button>
+  <button
+    class="primary"
+    style="width:100%;margin-top:8px"
+    onclick="deposit()"
+  >
+    Deposit Funds
+  </button>
 
-<button
-style="width:100%;margin-top:8px;background:#102233;border:1px solid #29445d;color:#fff;border-radius:9px;padding:11px"
-onclick="openModal('withdraw')">
-Request Withdrawal
-</button>
+  <button
+    style="
+      width:100%;
+      margin-top:8px;
+      padding:11px;
+      background:#102233;
+      color:#fff;
+      border:1px solid #29445d;
+      border-radius:8px
+    "
+    onclick="withdraw()"
+  >
+    Request Withdrawal
+  </button>
 
 </div>
 
@@ -257,238 +440,347 @@ Request Withdrawal
 
 <div class="panel">
 
-<div class="head">
+  <h2 style="font-size:16px">
+    Recent Transactions
+  </h2>
 
-<div>
-<h2>Recent Transactions</h2>
-<p class="muted">Account transaction history.</p>
-</div>
+  <div id="tx">
 
-</div>
+    <div
+      class="muted"
+      style="padding:12px 0"
+    >
+      No transactions yet.
+    </div>
 
-<div class="rows" id="transactions">
-
-<div class="muted" style="padding:15px 0">
-No transactions yet.
-</div>
-
-</div>
+  </div>
 
 </div>
 
-<footer>
-Vertex FX Client Portal
-</footer>
+<div
+  class="muted"
+  style="text-align:center;padding:12px"
+>
+  Vertex FX • Live payment and broker connections are controlled by the secure backend.
+</div>
 
 </div>
 
 <div class="modal" id="modal">
 
-<div class="modalBox">
+  <div class="box">
 
-<button class="close" onclick="closeModal()">×</button>
+    <button
+      class="close"
+      onclick="closeModal()"
+    >
+      ×
+    </button>
 
-<div id="modalContent"></div>
+    <div id="modalBody"></div>
 
-</div>
+  </div>
 
 </div>
 
 <script>
 
-const state = {
-balance:0,
-transactions:[],
-positions:[]
+let accountState = {
+  balance: 0,
+  transactions: [],
+  positions: []
 };
 
 const money = n =>
-'$' + Number(n).toLocaleString(undefined,{
-minimumFractionDigits:2,
-maximumFractionDigits:2
-});
+  '$' +
+  Number(n).toLocaleString(
+    undefined,
+    {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }
+  );
 
 function render(){
 
-document.getElementById('balance').textContent =
-money(state.balance);
+  document.getElementById('balance').textContent =
+    money(accountState.balance);
 
-document.getElementById('equity').textContent =
-money(state.balance);
+  document.getElementById('equity').textContent =
+    money(accountState.balance);
 
-document.getElementById('margin').textContent =
-money(state.balance);
+  document.getElementById('margin').textContent =
+    money(accountState.balance);
 
-document.getElementById('positions').textContent =
-state.positions.length;
+  document.getElementById('positions').textContent =
+    accountState.positions.length;
 
-document.getElementById('positionRows').innerHTML =
-state.positions.length
-?
-state.positions.map(p => `
-<div class="row">
-<span>EUR/USD</span>
-<span>${p.type}</span>
-<span>${p.lots}</span>
-<span>$0.00</span>
-</div>
-`).join('')
-:
-'<div class="muted" style="padding:15px 0">No open positions.</div>';
+  document.getElementById('tx').innerHTML =
+    accountState.transactions.length
 
-document.getElementById('transactions').innerHTML =
-state.transactions.length
-?
-state.transactions.map(t => `
-<div class="row">
-<span>${t.type}</span>
-<span>${money(t.amount)}</span>
-<span>${t.status}</span>
-<span>${t.date}</span>
-</div>
-`).join('')
-:
-'<div class="muted" style="padding:15px 0">No transactions yet.</div>';
+    ?
 
-}
+    accountState.transactions
+      .map(x => `
 
-function openModal(type){
+        <div class="row">
 
-let title =
-type === 'deposit'
-? 'Deposit Funds'
-: type === 'withdraw'
-? 'Request Withdrawal'
-: 'Account';
+          <span>${x.type}</span>
 
-let body;
+          <span>${money(x.amount)}</span>
 
-if(type === 'account'){
+          <span>${x.status}</span>
 
-body = `
-<h2>${title}</h2>
+          <span>${x.date}</span>
 
-<p class="muted">
-Client account portal
-</p>
+        </div>
 
-<div class="notice">
-Your secure backend, payment provider,
-KYC system and approved broker connection
-will be connected here.
-</div>
-`;
+      `)
+      .join('')
 
-}else{
+    :
 
-body = `
-
-<h2>${title}</h2>
-
-<p class="muted">
-Enter an amount to create a request.
-</p>
-
-<label>
-Amount
-
-<input
-id="amount"
-type="number"
-min="1"
-placeholder="0.00"
->
-
-</label>
-
-<button
-class="primary"
-style="width:100%;margin-top:15px"
-onclick="submitRequest('${type}')">
-
-${type === 'deposit'
-? 'Create Deposit Request'
-: 'Submit Withdrawal Request'}
-
-</button>
-
-`;
+    `
+      <div
+        class="muted"
+        style="padding:12px 0"
+      >
+        No transactions yet.
+      </div>
+    `;
 
 }
 
-document.getElementById('modalContent').innerHTML =
-body;
+function modal(html){
 
-document.getElementById('modal').style.display =
-'flex';
+  const modalEl =
+    document.getElementById('modal');
+
+  document.getElementById('modalBody').innerHTML =
+    html;
+
+  modalEl.style.display = 'flex';
 
 }
 
 function closeModal(){
 
-document.getElementById('modal').style.display =
-'none';
+  document.getElementById('modal').style.display =
+    'none';
 
 }
 
-function submitRequest(type){
+function deposit(){
 
-let amount =
-Number(document.getElementById('amount').value);
+  modal(`
 
-if(!amount || amount <= 0){
+    <h2>Deposit Funds</h2>
 
-alert('Enter a valid amount.');
+    <p class="muted">
+      Choose your currency and amount.
+    </p>
 
-return;
+    <label>
+      Currency
+
+      <select id="currency">
+
+        <option>KES</option>
+        <option>USD</option>
+        <option>EUR</option>
+        <option>GBP</option>
+
+      </select>
+
+    </label>
+
+    <label>
+      Amount
+
+      <input
+        id="amount"
+        type="number"
+        min="1"
+        value="100000"
+      >
+
+    </label>
+
+    <button
+      class="primary"
+      style="width:100%;margin-top:15px"
+      onclick="requestDeposit()"
+    >
+      Continue to secure payment
+    </button>
+
+    <div class="notice">
+
+      The payment provider must confirm receipt
+      before the trading balance changes.
+
+    </div>
+
+  `);
 
 }
 
-state.transactions.unshift({
+function withdraw(){
 
-type:
-type === 'deposit'
-? 'Deposit request'
-: 'Withdrawal request',
+  modal(`
 
-amount:amount,
+    <h2>Withdraw Funds</h2>
 
-status:'PENDING',
+    <label>
+      Currency
 
-date:new Date().toLocaleDateString()
+      <select id="currency">
 
-});
+        <option>KES</option>
+        <option>USD</option>
+        <option>EUR</option>
+        <option>GBP</option>
 
-render();
+      </select>
 
-closeModal();
+    </label>
 
-alert(
-type === 'deposit'
-?
-'Deposit request created.'
-:
-'Withdrawal request created.'
-);
+    <label>
+      Amount
+
+      <input
+        id="amount"
+        type="number"
+        min="1"
+      >
+
+    </label>
+
+    <button
+      class="primary"
+      style="width:100%;margin-top:15px"
+      onclick="requestWithdraw()"
+    >
+      Submit withdrawal
+    </button>
+
+  `);
 
 }
 
-function placeOrder(type){
+function account(){
 
-const lots =
-Number(document.getElementById('lots').value);
+  modal(`
 
-if(!lots || lots <= 0){
+    <h2>Account</h2>
 
-alert('Enter a valid lot size.');
+    <p class="muted">
+      Client account portal
+    </p>
 
-return;
+    <div class="notice">
+
+      KYC, payment and broker connections
+      are handled by the secure backend.
+
+    </div>
+
+  `);
 
 }
 
-alert(
-'Order prepared. Connect the approved broker API before live execution.'
-);
+function requestDeposit(){
+
+  const amount =
+    Number(
+      document.getElementById('amount').value
+    );
+
+  if(!amount){
+
+    alert('Enter a valid amount.');
+
+    return;
+
+  }
+
+  accountState.transactions.unshift({
+
+    type:'Deposit request',
+
+    amount:amount,
+
+    status:'PENDING',
+
+    date:new Date().toLocaleDateString()
+
+  });
+
+  render();
+
+  closeModal();
+
+  alert(
+    'Deposit request created. Connect the configured payment provider to complete payment.'
+  );
+
+}
+
+function requestWithdraw(){
+
+  const amount =
+    Number(
+      document.getElementById('amount').value
+    );
+
+  if(!amount){
+
+    alert('Enter a valid amount.');
+
+    return;
+
+  }
+
+  accountState.transactions.unshift({
+
+    type:'Withdrawal request',
+
+    amount:amount,
+
+    status:'PENDING',
+
+    date:new Date().toLocaleDateString()
+
+  });
+
+  render();
+
+  closeModal();
+
+  alert(
+    'Withdrawal request created.'
+  );
+
+}
+
+function trade(type){
+
+  const lots =
+    Number(
+      document.getElementById('lots').value
+    );
+
+  if(!lots){
+
+    alert('Enter a lot size.');
+
+    return;
+
+  }
+
+  alert(
+    'Trade request prepared. The secure backend must send it to the approved broker API before it becomes a live position.'
+  );
 
 }
 

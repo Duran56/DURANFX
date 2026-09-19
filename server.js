@@ -7,39 +7,54 @@ const path = require("path");
 require("dotenv").config();
 
 const app = express();
-
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
 const PORT = process.env.PORT || 3000;
 
-/* =====================================================
+app.use(cors());
+app.use(express.json({ limit: "1mb" }));
+
+/* =========================================================
    DATABASE
-===================================================== */
+========================================================= */
 
 const DB_FILE = path.join(__dirname, "vertex-data.json");
 
 function loadDB() {
   if (!fs.existsSync(DB_FILE)) {
-    return {
+    const initial = {
       users: [],
       transactions: [],
       withdrawals: [],
       trades: []
     };
+
+    fs.writeFileSync(
+      DB_FILE,
+      JSON.stringify(initial, null, 2)
+    );
+
+    return initial;
   }
 
   try {
-    const data = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+    const db = JSON.parse(
+      fs.readFileSync(DB_FILE, "utf8")
+    );
 
     return {
-      users: data.users || [],
-      transactions: data.transactions || [],
-      withdrawals: data.withdrawals || [],
-      trades: data.trades || []
+      users: Array.isArray(db.users) ? db.users : [],
+      transactions: Array.isArray(db.transactions)
+        ? db.transactions
+        : [],
+      withdrawals: Array.isArray(db.withdrawals)
+        ? db.withdrawals
+        : [],
+      trades: Array.isArray(db.trades)
+        ? db.trades
+        : []
     };
-  } catch {
+  } catch (error) {
+    console.error("DATABASE LOAD ERROR:", error);
+
     return {
       users: [],
       transactions: [],
@@ -58,13 +73,15 @@ function saveDB() {
   );
 }
 
-
-/* =====================================================
+/* =========================================================
    HELPERS
-===================================================== */
+========================================================= */
 
-function generateId() {
-  return crypto.randomBytes(16).toString("hex");
+function generateId(prefix = "") {
+  return (
+    prefix +
+    crypto.randomBytes(12).toString("hex")
+  );
 }
 
 function hashPassword(password) {
@@ -78,41 +95,40 @@ function createToken() {
   return crypto.randomBytes(32).toString("hex");
 }
 
+const sessions = new Map();
+const adminSessions = new Map();
+
 function normalizePhone(phone) {
-  let value = String(phone || "").trim();
+  let value = String(phone || "")
+    .trim()
+    .replace(/\s+/g, "");
 
   if (value.startsWith("+254")) {
     value = value.substring(1);
   }
 
-  if (value.startsWith("07")) {
-    value = "254" + value.substring(1);
-  }
-
-  if (value.startsWith("01")) {
+  if (value.startsWith("0")) {
     value = "254" + value.substring(1);
   }
 
   return value;
 }
 
-
-/* =====================================================
-   SESSIONS
-===================================================== */
-
-const sessions = new Map();
-const adminSessions = new Map();
-
+function isValidKenyanPhone(phone) {
+  return /^254\d{9}$/.test(phone);
+}
 
 function getUserFromRequest(req) {
-  const header = req.headers.authorization || "";
+  const auth =
+    req.headers.authorization || "";
 
-  if (!header.startsWith("Bearer ")) {
+  if (!auth.startsWith("Bearer ")) {
     return null;
   }
 
-  const token = header.substring(7);
+  const token = auth
+    .substring(7)
+    .trim();
 
   const userId = sessions.get(token);
 
@@ -125,14 +141,13 @@ function getUserFromRequest(req) {
   ) || null;
 }
 
-
 function requireUser(req, res, next) {
   const user = getUserFromRequest(req);
 
   if (!user) {
     return res.status(401).json({
       success: false,
-      message: "Please log in first."
+      message: "Please log in again."
     });
   }
 
@@ -140,18 +155,20 @@ function requireUser(req, res, next) {
   next();
 }
 
-
 function adminAuth(req, res, next) {
-  const header = req.headers.authorization || "";
+  const auth =
+    req.headers.authorization || "";
 
-  if (!header.startsWith("Bearer ")) {
+  if (!auth.startsWith("Bearer ")) {
     return res.status(401).json({
       success: false,
       message: "Admin login required."
     });
   }
 
-  const token = header.substring(7);
+  const token = auth
+    .substring(7)
+    .trim();
 
   if (!adminSessions.has(token)) {
     return res.status(401).json({
@@ -163,97 +180,113 @@ function adminAuth(req, res, next) {
   next();
 }
 
+function safeUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    balance: Number(user.balance || 0),
+    createdAt: user.createdAt
+  };
+}
 
-/* =====================================================
-   HEALTH
-===================================================== */
-
-app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
-    message: "Vertex FX server is running.",
-    time: new Date().toISOString()
-  });
-});
-
-
-/* =====================================================
-   WEBSITE
-===================================================== */
+/* =========================================================
+   ROOT / HEALTH
+========================================================= */
 
 app.get("/", (req, res) => {
-  const indexPath = path.join(__dirname, "index.html");
+  const indexPath =
+    path.join(__dirname, "index.html");
 
   if (fs.existsSync(indexPath)) {
     return res.sendFile(indexPath);
   }
 
-  res.send(`
-    <h1>Vertex FX</h1>
-    <p>Server is running.</p>
-  `);
+  res.status(404).send(
+    "Vertex FX index.html not found."
+  );
 });
 
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    status: "online",
+    service: "Vertex FX"
+  });
+});
 
-/* =====================================================
+/* =========================================================
    REGISTER
-===================================================== */
+========================================================= */
 
 app.post("/api/register", (req, res) => {
   try {
     const {
       name,
       email,
-      phone,
       password
     } = req.body;
 
-    if (!name || !email || !phone || !password) {
+    const phone = normalizePhone(
+      req.body.phone
+    );
+
+    if (
+      !name ||
+      !email ||
+      !phone ||
+      !password
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Name, email, phone and password are required."
+        message: "Please fill in all fields."
       });
     }
 
     if (String(password).length < 6) {
       return res.status(400).json({
         success: false,
-        message: "Password must be at least 6 characters."
+        message:
+          "Password must be at least 6 characters."
+      });
+    }
+
+    if (!isValidKenyanPhone(phone)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Use a valid Kenyan phone number."
       });
     }
 
     const cleanEmail =
-      String(email).toLowerCase().trim();
+      String(email)
+        .trim()
+        .toLowerCase();
 
-    const cleanPhone =
-      normalizePhone(phone);
+    const existing =
+      db.users.find(
+        user => user.email === cleanEmail
+      );
 
-    if (!/^254\d{9}$/.test(cleanPhone)) {
-      return res.status(400).json({
+    if (existing) {
+      return res.status(409).json({
         success: false,
-        message: "Use Kenyan phone format 2547XXXXXXXX."
-      });
-    }
-
-    const existingUser = db.users.find(
-      user => user.email === cleanEmail
-    );
-
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "An account with this email already exists."
+        message:
+          "An account with this email already exists."
       });
     }
 
     const user = {
-      id: generateId(),
+      id: generateId("usr_"),
       name: String(name).trim(),
       email: cleanEmail,
-      phone: cleanPhone,
+      phone,
       password: hashPassword(password),
       balance: 0,
-      createdAt: new Date().toISOString()
+      createdAt:
+        new Date().toISOString()
     };
 
     db.users.push(user);
@@ -261,35 +294,36 @@ app.post("/api/register", (req, res) => {
 
     const token = createToken();
 
-    sessions.set(token, user.id);
+    sessions.set(
+      token,
+      user.id
+    );
 
     res.json({
       success: true,
-      message: "Account created successfully.",
+      message:
+        "Account created successfully.",
       token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        balance: user.balance
-      }
+      user: safeUser(user)
     });
 
   } catch (error) {
-    console.error("REGISTER ERROR:", error);
+    console.error(
+      "REGISTER ERROR:",
+      error
+    );
 
     res.status(500).json({
       success: false,
-      message: "Registration failed."
+      message:
+        "Registration failed."
     });
   }
 });
 
-
-/* =====================================================
+/* =========================================================
    LOGIN
-===================================================== */
+========================================================= */
 
 app.post("/api/login", (req, res) => {
   try {
@@ -299,41 +333,45 @@ app.post("/api/login", (req, res) => {
     } = req.body;
 
     const cleanEmail =
-      String(email || "").toLowerCase().trim();
+      String(email || "")
+        .trim()
+        .toLowerCase();
 
-    const user = db.users.find(
-      u => u.email === cleanEmail
-    );
+    const user =
+      db.users.find(
+        u => u.email === cleanEmail
+      );
 
     if (
       !user ||
-      user.password !== hashPassword(password || "")
+      user.password !==
+        hashPassword(password)
     ) {
       return res.status(401).json({
         success: false,
-        message: "Invalid email or password."
+        message:
+          "Invalid email or password."
       });
     }
 
     const token = createToken();
 
-    sessions.set(token, user.id);
+    sessions.set(
+      token,
+      user.id
+    );
 
     res.json({
       success: true,
-      message: "Login successful.",
       token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || "",
-        balance: Number(user.balance || 0)
-      }
+      user: safeUser(user)
     });
 
   } catch (error) {
-    console.error("LOGIN ERROR:", error);
+    console.error(
+      "LOGIN ERROR:",
+      error
+    );
 
     res.status(500).json({
       success: false,
@@ -342,51 +380,64 @@ app.post("/api/login", (req, res) => {
   }
 });
 
-
-/* =====================================================
+/* =========================================================
    CURRENT USER
-===================================================== */
+========================================================= */
 
-app.get("/api/me", requireUser, (req, res) => {
-  const user = req.user;
-
-  res.json({
-    success: true,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone || "",
-      balance: Number(user.balance || 0)
-    }
-  });
-});
-
-
-/* =====================================================
-   LOGOUT
-===================================================== */
-
-app.post("/api/logout", (req, res) => {
-  const header = req.headers.authorization || "";
-
-  if (header.startsWith("Bearer ")) {
-    const token = header.substring(7);
-    sessions.delete(token);
+app.get(
+  "/api/me",
+  requireUser,
+  (req, res) => {
+    res.json({
+      success: true,
+      user: safeUser(req.user)
+    });
   }
+);
 
-  res.json({
-    success: true,
-    message: "Logged out successfully."
-  });
-});
+/* =========================================================
+   LOGOUT
+========================================================= */
 
+app.post(
+  "/api/logout",
+  (req, res) => {
 
-/* =====================================================
+    const auth =
+      req.headers.authorization || "";
+
+    if (auth.startsWith("Bearer ")) {
+      const token =
+        auth.substring(7).trim();
+
+      sessions.delete(token);
+    }
+
+    res.json({
+      success: true
+    });
+  }
+);
+
+/* =========================================================
+   MPESA CONFIG CHECK
+========================================================= */
+
+function mpesaConfigured() {
+  return Boolean(
+    process.env.MPESA_CONSUMER_KEY &&
+    process.env.MPESA_CONSUMER_SECRET &&
+    process.env.MPESA_SHORTCODE &&
+    process.env.MPESA_PASSKEY &&
+    process.env.MPESA_CALLBACK_URL
+  );
+}
+
+/* =========================================================
    MPESA ACCESS TOKEN
-===================================================== */
+========================================================= */
 
-async function getMpesaToken() {
+async function getMpesaAccessToken() {
 
   const consumerKey =
     process.env.MPESA_CONSUMER_KEY;
@@ -394,67 +445,113 @@ async function getMpesaToken() {
   const consumerSecret =
     process.env.MPESA_CONSUMER_SECRET;
 
-  if (!consumerKey || !consumerSecret) {
+  if (
+    !consumerKey ||
+    !consumerSecret
+  ) {
     throw new Error(
-      "M-Pesa consumer key or secret is not configured."
+      "M-Pesa Consumer Key or Consumer Secret is missing."
     );
   }
 
-  const auth =
-    Buffer
-      .from(
-        `${consumerKey}:${consumerSecret}`
-      )
-      .toString("base64");
+  const environment =
+    String(
+      process.env.MPESA_ENV ||
+      "sandbox"
+    ).toLowerCase();
 
-  const response =
-    await axios.get(
-      "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-      {
-        headers: {
-          Authorization: `Basic ${auth}`
+  const baseUrl =
+    environment === "production"
+      ? "https://api.safaricom.co.ke"
+      : "https://sandbox.safaricom.co.ke";
+
+  const auth = Buffer
+    .from(
+      consumerKey +
+      ":" +
+      consumerSecret
+    )
+    .toString("base64");
+
+  try {
+
+    const response =
+      await axios.get(
+        baseUrl +
+          "/oauth/v1/generate?grant_type=client_credentials",
+        {
+          headers: {
+            Authorization:
+              "Basic " + auth
+          },
+          timeout: 30000
         }
-      }
+      );
+
+    if (
+      !response.data ||
+      !response.data.access_token
+    ) {
+      throw new Error(
+        "Safaricom did not return an access token."
+      );
+    }
+
+    return {
+      token:
+        response.data.access_token,
+      baseUrl
+    };
+
+  } catch (error) {
+
+    console.error(
+      "MPESA OAUTH ERROR:"
     );
 
-  return response.data.access_token;
-}
+    if (error.response) {
+      console.error(
+        "HTTP:",
+        error.response.status
+      );
 
+      console.error(
+        "RESPONSE:",
+        JSON.stringify(
+          error.response.data
+        )
+      );
+    } else {
+      console.error(
+        error.message
+      );
+    }
 
-/* =====================================================
-   MPESA PHONE VALIDATION
-===================================================== */
-
-function validateMpesaConfiguration() {
-
-  const required = [
-    "MPESA_CONSUMER_KEY",
-    "MPESA_CONSUMER_SECRET",
-    "MPESA_SHORTCODE",
-    "MPESA_PASSKEY",
-    "MPESA_CALLBACK_URL"
-  ];
-
-  const missing = required.filter(
-    key => !process.env[key]
-  );
-
-  if (missing.length > 0) {
-    return {
-      valid: false,
-      missing
-    };
+    throw error;
   }
-
-  return {
-    valid: true
-  };
 }
 
+/* =========================================================
+   MPESA PASSWORD
+========================================================= */
 
-/* =====================================================
-   MPESA DEPOSIT
-===================================================== */
+function generateMpesaPassword(
+  shortcode,
+  passkey,
+  timestamp
+) {
+  return Buffer
+    .from(
+      String(shortcode) +
+      String(passkey) +
+      String(timestamp)
+    )
+    .toString("base64");
+}
+
+/* =========================================================
+   MPESA STK DEPOSIT
+========================================================= */
 
 app.post(
   "/api/mpesa/deposit",
@@ -463,46 +560,50 @@ app.post(
 
     try {
 
+      if (!mpesaConfigured()) {
+
+        return res.status(500).json({
+          success: false,
+          message:
+            "M-Pesa is not fully configured."
+        });
+      }
+
       const amount =
         Number(req.body.amount);
 
       const phone =
-        normalizePhone(req.body.phone);
+        normalizePhone(
+          req.body.phone ||
+          req.user.phone
+        );
 
-      if (!amount || amount < 1) {
+      if (
+        !Number.isFinite(amount) ||
+        amount < 1
+      ) {
         return res.status(400).json({
-          success: false,
-          message: "Enter a valid deposit amount."
-        });
-      }
-
-      if (!/^254\d{9}$/.test(phone)) {
-        return res.status(400).json({
-          success: false,
-          message: "Use Kenyan phone format 2547XXXXXXXX."
-        });
-      }
-
-      const config =
-        validateMpesaConfiguration();
-
-      if (!config.valid) {
-        return res.status(500).json({
           success: false,
           message:
-            "M-Pesa is not fully configured.",
-          missing: config.missing
+            "Enter a valid deposit amount."
         });
       }
 
-      const token =
-        await getMpesaToken();
+      if (
+        !isValidKenyanPhone(phone)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Enter a valid Kenyan M-Pesa phone number."
+        });
+      }
 
-      const timestamp =
-        new Date()
-          .toISOString()
-          .replace(/[-:TZ.]/g, "")
-          .substring(0, 14);
+      const {
+        token,
+        baseUrl
+      } =
+        await getMpesaAccessToken();
 
       const shortcode =
         process.env.MPESA_SHORTCODE;
@@ -510,128 +611,189 @@ app.post(
       const passkey =
         process.env.MPESA_PASSKEY;
 
-      const password =
-        Buffer
-          .from(
-            shortcode +
-            passkey +
-            timestamp
+      const callbackUrl =
+        process.env.MPESA_CALLBACK_URL;
+
+      const timestamp =
+        new Date()
+          .toISOString()
+          .replace(
+            /[-:TZ.]/g,
+            ""
           )
-          .toString("base64");
+          .substring(0, 14);
+
+      const password =
+        generateMpesaPassword(
+          shortcode,
+          passkey,
+          timestamp
+        );
+
+      const transactionId =
+        generateId("txn_");
 
       const payload = {
 
-        BusinessShortCode: Number(shortcode),
+        BusinessShortCode:
+          shortcode,
 
-        Password: password,
+        Password:
+          password,
 
-        Timestamp: timestamp,
+        Timestamp:
+          timestamp,
 
         TransactionType:
           "CustomerPayBillOnline",
 
-        Amount: Math.floor(amount),
+        Amount:
+          Math.round(amount),
 
-        PartyA: phone,
+        PartyA:
+          phone,
 
-        PartyB: Number(shortcode),
+        PartyB:
+          shortcode,
 
-        PhoneNumber: phone,
+        PhoneNumber:
+          phone,
 
         CallBackURL:
-          process.env.MPESA_CALLBACK_URL,
+          callbackUrl,
 
         AccountReference:
           "VERTEXFX",
 
         TransactionDesc:
-          "Vertex FX Wallet Deposit"
-
+          "Vertex FX Deposit"
       };
+
+      console.log(
+        "MPESA STK REQUEST:",
+        JSON.stringify({
+          ...payload,
+          Password: "[HIDDEN]",
+          PhoneNumber: phone
+        })
+      );
 
       const response =
         await axios.post(
-          "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+          baseUrl +
+            "/mpesa/stkpush/v1/processrequest",
           payload,
           {
             headers: {
               Authorization:
-                `Bearer ${token}`,
+                "Bearer " + token,
               "Content-Type":
                 "application/json"
-            }
+            },
+            timeout: 30000
           }
         );
 
-      const result =
-        response.data;
+      console.log(
+        "MPESA STK RESPONSE:",
+        JSON.stringify(
+          response.data
+        )
+      );
 
       const transaction = {
-
-        id: generateId(),
-
+        id: transactionId,
         userId: req.user.id,
-
         type: "DEPOSIT",
-
-        amount: Number(amount),
-
-        phone,
-
+        amount: amount,
+        phone: phone,
         status: "PENDING",
-
         checkoutRequestId:
-          result.CheckoutRequestID || "",
-
+          response.data
+            ?.CheckoutRequestID ||
+          null,
         merchantRequestId:
-          result.MerchantRequestID || "",
-
+          response.data
+            ?.MerchantRequestID ||
+          null,
         createdAt:
           new Date().toISOString()
-
       };
 
-      db.transactions.push(transaction);
+      db.transactions.push(
+        transaction
+      );
 
       saveDB();
 
       res.json({
         success: true,
         message:
-          result.CustomerMessage ||
-          result.ResponseDescription ||
-          "STK Push sent. Complete the payment on your phone.",
-        transactionId: transaction.id,
+          response.data
+            ?.CustomerMessage ||
+          "M-Pesa payment request sent.",
         checkoutRequestId:
-          transaction.checkoutRequestId
+          response.data
+            ?.CheckoutRequestID ||
+          null
       });
 
     } catch (error) {
 
       console.error(
-        "MPESA DEPOSIT ERROR:",
-        error.response?.data ||
+        "MPESA DEPOSIT ERROR:"
+      );
+
+      if (error.response) {
+
+        console.error(
+          "HTTP STATUS:",
+          error.response.status
+        );
+
+        console.error(
+          "SAFEARICOM RESPONSE:",
+          JSON.stringify(
+            error.response.data
+          )
+        );
+
+        console.error(
+          "REQUEST URL:",
+          error.config?.url
+        );
+
+        return res.status(
+          error.response.status || 500
+        ).json({
+          success: false,
+          message:
+            "Safaricom rejected the M-Pesa payment request.",
+          details:
+            error.response.data ||
+            null
+        });
+      }
+
+      console.error(
+        "ERROR MESSAGE:",
         error.message
       );
 
       res.status(500).json({
         success: false,
         message:
-          error.response?.data?.errorMessage ||
-          error.response?.data?.ResponseDescription ||
           "Unable to start M-Pesa payment.",
         details:
-          error.response?.data || undefined
+          error.message
       });
     }
-
   }
 );
 
-
-/* =====================================================
+/* =========================================================
    MPESA CALLBACK
-===================================================== */
+========================================================= */
 
 app.post(
   "/api/mpesa/callback",
@@ -640,38 +802,42 @@ app.post(
     try {
 
       console.log(
-        "M-Pesa callback received:",
-        JSON.stringify(req.body)
+        "MPESA CALLBACK:",
+        JSON.stringify(
+          req.body
+        )
       );
 
-      const callback =
-        req.body?.Body?.stkCallback;
+      const stk =
+        req.body
+          ?.Body
+          ?.stkCallback;
 
-      if (!callback) {
+      if (!stk) {
         return res.json({
           ResultCode: 0,
           ResultDesc: "Accepted"
         });
       }
 
-      const checkoutRequestId =
-        callback.CheckoutRequestID;
+      const checkoutId =
+        stk.CheckoutRequestID;
 
       const resultCode =
-        Number(callback.ResultCode);
+        Number(stk.ResultCode);
 
       const transaction =
         db.transactions.find(
-          tx =>
-            tx.checkoutRequestId ===
-            checkoutRequestId
+          t =>
+            t.checkoutRequestId ===
+            checkoutId
         );
 
       if (!transaction) {
 
         console.log(
-          "Transaction not found:",
-          checkoutRequestId
+          "Callback transaction not found:",
+          checkoutId
         );
 
         return res.json({
@@ -680,35 +846,65 @@ app.post(
         });
       }
 
-      if (transaction.status === "COMPLETED") {
-        return res.json({
-          ResultCode: 0,
-          ResultDesc: "Already processed"
-        });
-      }
+      if (
+        resultCode === 0 &&
+        transaction.status !==
+          "COMPLETED"
+      ) {
 
-      if (resultCode === 0) {
+        let receipt = null;
 
-        transaction.status =
-          "COMPLETED";
+        const items =
+          stk.CallbackMetadata
+            ?.Item || [];
 
-        transaction.completedAt =
-          new Date().toISOString();
+        for (
+          const item of items
+        ) {
+          if (
+            item.Name ===
+            "MpesaReceiptNumber"
+          ) {
+            receipt =
+              item.Value;
+          }
+        }
 
         const user =
           db.users.find(
-            u => u.id === transaction.userId
+            u =>
+              u.id ===
+              transaction.userId
           );
 
         if (user) {
 
           user.balance =
             Number(user.balance || 0) +
-            Number(transaction.amount || 0);
+            Number(transaction.amount);
 
+          transaction.status =
+            "COMPLETED";
+
+          transaction.receipt =
+            receipt;
+
+          transaction.completedAt =
+            new Date().toISOString();
+
+          saveDB();
+
+          console.log(
+            "DEPOSIT COMPLETED:",
+            transaction.amount,
+            "User:",
+            user.email
+          );
         }
 
-      } else {
+      } else if (
+        resultCode !== 0
+      ) {
 
         transaction.status =
           "FAILED";
@@ -717,11 +913,11 @@ app.post(
           resultCode;
 
         transaction.resultDescription =
-          callback.ResultDesc || "Payment failed.";
+          stk.ResultDesc ||
+          "M-Pesa payment failed.";
 
+        saveDB();
       }
-
-      saveDB();
 
       res.json({
         ResultCode: 0,
@@ -731,7 +927,7 @@ app.post(
     } catch (error) {
 
       console.error(
-        "CALLBACK ERROR:",
+        "MPESA CALLBACK ERROR:",
         error
       );
 
@@ -740,14 +936,29 @@ app.post(
         ResultDesc: "Accepted"
       });
     }
-
   }
 );
 
+/* =========================================================
+   WALLET
+========================================================= */
 
-/* =====================================================
+app.get(
+  "/api/wallet",
+  requireUser,
+  (req, res) => {
+
+    res.json({
+      success: true,
+      balance:
+        Number(req.user.balance || 0)
+    });
+  }
+);
+
+/* =========================================================
    TRANSACTIONS
-===================================================== */
+========================================================= */
 
 app.get(
   "/api/transactions",
@@ -757,8 +968,9 @@ app.get(
     const transactions =
       db.transactions
         .filter(
-          tx =>
-            tx.userId === req.user.id
+          t =>
+            t.userId ===
+            req.user.id
         )
         .sort(
           (a, b) =>
@@ -770,195 +982,76 @@ app.get(
       success: true,
       transactions
     });
-
   }
 );
 
+/* =========================================================
+   WITHDRAW
+========================================================= */
 
-/* =====================================================
-   WITHDRAWAL
-===================================================== */
+async function processWithdrawal(
+  req,
+  res
+) {
 
-app.post(
-  "/api/mpesa/withdraw",
-  requireUser,
-  (req, res) => {
-
-    try {
-
-      const amount =
-        Number(req.body.amount);
-
-      const phone =
-        normalizePhone(req.body.phone);
-
-      if (!amount || amount <= 0) {
-        return res.status(400).json({
-          success: false,
-          message: "Enter a valid withdrawal amount."
-        });
-      }
-
-      if (!/^254\d{9}$/.test(phone)) {
-        return res.status(400).json({
-          success: false,
-          message: "Use Kenyan phone format 2547XXXXXXXX."
-        });
-      }
-
-      const user =
-        req.user;
-
-      if (
-        Number(user.balance || 0) <
-        amount
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Insufficient wallet balance."
-        });
-      }
-
-      /*
-        Reserve the money immediately.
-        The balance is returned only if
-        the admin rejects the request.
-      */
-
-      user.balance =
-        Number(user.balance || 0) -
-        amount;
-
-      const withdrawal = {
-
-        id: generateId(),
-
-        userId: user.id,
-
-        phone,
-
-        amount,
-
-        status: "PENDING",
-
-        createdAt:
-          new Date().toISOString()
-
-      };
-
-      db.withdrawals.push(
-        withdrawal
-      );
-
-      db.transactions.push({
-
-        id: generateId(),
-
-        userId: user.id,
-
-        type: "WITHDRAWAL",
-
-        amount,
-
-        phone,
-
-        status: "PENDING",
-
-        withdrawalId:
-          withdrawal.id,
-
-        createdAt:
-          new Date().toISOString()
-
-      });
-
-      saveDB();
-
-      res.json({
-        success: true,
-        message:
-          "Withdrawal request submitted for admin/payment processing.",
-        withdrawal
-      });
-
-    } catch (error) {
-
-      console.error(
-        "WITHDRAW ERROR:",
-        error
-      );
-
-      res.status(500).json({
-        success: false,
-        message: "Withdrawal request failed."
-      });
-    }
-
-  }
-);
-
-
-/* =====================================================
-   COMPATIBILITY WITH OLD FRONTEND PATH
-===================================================== */
-
-app.post(
-  "/api/withdraw",
-  requireUser,
-  (req, res) => {
+  try {
 
     const amount =
       Number(req.body.amount);
 
     const phone =
-      normalizePhone(req.body.phone);
-
-    if (!amount || amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Enter a valid withdrawal amount."
-      });
-    }
-
-    if (!/^254\d{9}$/.test(phone)) {
-      return res.status(400).json({
-        success: false,
-        message: "Use Kenyan phone format 2547XXXXXXXX."
-      });
-    }
-
-    const user =
-      req.user;
+      normalizePhone(
+        req.body.phone ||
+        req.user.phone
+      );
 
     if (
-      Number(user.balance || 0) <
+      !Number.isFinite(amount) ||
+      amount < 1
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Enter a valid withdrawal amount."
+      });
+    }
+
+    if (
+      !isValidKenyanPhone(phone)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Enter a valid Kenyan phone number."
+      });
+    }
+
+    if (
+      Number(req.user.balance || 0) <
       amount
     ) {
       return res.status(400).json({
         success: false,
-        message: "Insufficient wallet balance."
+        message:
+          "Insufficient wallet balance."
       });
     }
 
-    user.balance =
-      Number(user.balance || 0) -
+    req.user.balance =
+      Number(req.user.balance) -
       amount;
 
     const withdrawal = {
-
-      id: generateId(),
-
-      userId: user.id,
-
-      phone,
-
+      id:
+        generateId("wd_"),
+      userId:
+        req.user.id,
       amount,
-
-      status: "PENDING",
-
+      phone,
+      status:
+        "PENDING",
       createdAt:
         new Date().toISOString()
-
     };
 
     db.withdrawals.push(
@@ -966,25 +1059,22 @@ app.post(
     );
 
     db.transactions.push({
-
-      id: generateId(),
-
-      userId: user.id,
-
-      type: "WITHDRAWAL",
-
-      amount,
-
-      phone,
-
-      status: "PENDING",
-
+      id:
+        generateId("txn_"),
+      userId:
+        req.user.id,
+      type:
+        "WITHDRAWAL",
+      amount:
+        amount,
+      phone:
+        phone,
+      status:
+        "PENDING",
       withdrawalId:
         withdrawal.id,
-
       createdAt:
         new Date().toISOString()
-
     });
 
     saveDB();
@@ -992,49 +1082,57 @@ app.post(
     res.json({
       success: true,
       message:
-        "Withdrawal request submitted for admin/payment processing.",
+        "Withdrawal request submitted for admin approval.",
       withdrawal
     });
 
+  } catch (error) {
+
+    console.error(
+      "WITHDRAWAL ERROR:",
+      error
+    );
+
+    res.status(500).json({
+      success: false,
+      message:
+        "Withdrawal failed."
+    });
   }
+}
+
+app.post(
+  "/api/withdraw",
+  requireUser,
+  processWithdrawal
 );
 
+app.post(
+  "/api/mpesa/withdraw",
+  requireUser,
+  processWithdrawal
+);
 
-/* =====================================================
-   MARKET
-===================================================== */
+/* =========================================================
+   TRADING
+========================================================= */
 
-let marketPrice = 100;
+app.get(
+  "/api/market",
+  (req, res) => {
 
-app.get("/api/market", (req, res) => {
+    const price = 99.75;
 
-  const movement =
-    (Math.random() - 0.5) * 0.20;
-
-  marketPrice += movement;
-
-  if (marketPrice < 95) {
-    marketPrice = 95;
+    res.json({
+      success: true,
+      symbol:
+        "VFX/USD",
+      price,
+      market:
+        "SIMULATED"
+    });
   }
-
-  if (marketPrice > 105) {
-    marketPrice = 105;
-  }
-
-  res.json({
-    success: true,
-    symbol: "VFX/USD",
-    price:
-      Number(marketPrice.toFixed(5)),
-    demo: true
-  });
-
-});
-
-
-/* =====================================================
-   DEMO TRADE
-===================================================== */
+);
 
 app.post(
   "/api/trade",
@@ -1044,11 +1142,15 @@ app.post(
     try {
 
       const side =
-        String(req.body.side || "")
-          .toUpperCase();
+        String(
+          req.body.side || ""
+        ).toUpperCase();
 
       const amount =
         Number(req.body.amount);
+
+      const price =
+        99.75;
 
       if (
         side !== "BUY" &&
@@ -1056,79 +1158,75 @@ app.post(
       ) {
         return res.status(400).json({
           success: false,
-          message: "Trade side must be BUY or SELL."
+          message:
+            "Trade side must be BUY or SELL."
         });
       }
-
-      if (!amount || amount <= 0) {
-        return res.status(400).json({
-          success: false,
-          message: "Enter a valid trade amount."
-        });
-      }
-
-      const user =
-        req.user;
 
       if (
-        Number(user.balance || 0) <
+        !Number.isFinite(amount) ||
+        amount <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Enter a valid trade amount."
+        });
+      }
+
+      if (
+        req.user.balance <
         amount
       ) {
         return res.status(400).json({
           success: false,
-          message: "Insufficient wallet balance."
+          message:
+            "Insufficient wallet balance."
         });
       }
 
-      const price =
-        Number(
-          marketPrice.toFixed(5)
-        );
-
-      user.balance =
-        Number(user.balance || 0) -
+      req.user.balance -=
         amount;
 
       const trade = {
-
-        id: generateId(),
-
-        userId: user.id,
-
+        id:
+          generateId("trade_"),
+        userId:
+          req.user.id,
+        symbol:
+          "VFX/USD",
         side,
-
         amount,
-
         price,
-
-        entryPrice: price,
-
-        status: "SIMULATED",
-
+        entryPrice:
+          price,
+        status:
+          "OPEN",
+        mode:
+          "SIMULATED",
         createdAt:
           new Date().toISOString()
-
       };
 
-      db.trades.push(trade);
+      db.trades.push(
+        trade
+      );
 
       db.transactions.push({
-
-        id: generateId(),
-
-        userId: user.id,
-
-        type: "TRADE",
-
-        amount,
-
-        status: "SIMULATED",
-
-        tradeId: trade.id,
-
+        id:
+          generateId("txn_"),
+        userId:
+          req.user.id,
+        type:
+          "TRADE",
+        amount:
+          amount,
+        status:
+          "COMPLETED",
+        tradeId:
+          trade.id,
         createdAt:
           new Date().toISOString()
-
       });
 
       saveDB();
@@ -1136,10 +1234,10 @@ app.post(
       res.json({
         success: true,
         message:
-          `${side} demo trade executed successfully.`,
+          "Demo trade opened.",
         trade,
         balance:
-          user.balance
+          req.user.balance
       });
 
     } catch (error) {
@@ -1151,17 +1249,16 @@ app.post(
 
       res.status(500).json({
         success: false,
-        message: "Trade failed."
+        message:
+          "Trade failed."
       });
     }
-
   }
 );
 
-
-/* =====================================================
+/* =========================================================
    TRADE HISTORY
-===================================================== */
+========================================================= */
 
 app.get(
   "/api/trades",
@@ -1171,8 +1268,8 @@ app.get(
     const trades =
       db.trades
         .filter(
-          trade =>
-            trade.userId ===
+          t =>
+            t.userId ===
             req.user.id
         )
         .sort(
@@ -1185,14 +1282,12 @@ app.get(
       success: true,
       trades
     });
-
   }
 );
 
-
-/* =====================================================
+/* =========================================================
    ADMIN LOGIN
-===================================================== */
+========================================================= */
 
 app.post(
   "/api/admin/login",
@@ -1201,7 +1296,7 @@ app.post(
     const username =
       String(
         req.body.username || ""
-      ).trim();
+      );
 
     const password =
       String(
@@ -1209,25 +1304,20 @@ app.post(
       );
 
     if (
-      !process.env.ADMIN_USERNAME ||
-      !process.env.ADMIN_PASSWORD
-    ) {
-      return res.status(500).json({
-        success: false,
-        message:
-          "Admin credentials are not configured on the server."
-      });
-    }
-
-    if (
       username !==
-        process.env.ADMIN_USERNAME ||
+        String(
+          process.env.ADMIN_USERNAME || ""
+        ) ||
       password !==
-        process.env.ADMIN_PASSWORD
+        String(
+          process.env.ADMIN_PASSWORD || ""
+        )
     ) {
+
       return res.status(401).json({
         success: false,
-        message: "Invalid admin username or password."
+        message:
+          "Invalid admin credentials."
       });
     }
 
@@ -1236,302 +1326,236 @@ app.post(
 
     adminSessions.set(
       token,
-      {
-        createdAt:
-          Date.now()
-      }
+      true
     );
 
     res.json({
       success: true,
-      message: "Admin login successful.",
       token
     });
-
   }
 );
 
-
-/* =====================================================
+/* =========================================================
    ADMIN DASHBOARD
-===================================================== */
+========================================================= */
 
 app.get(
   "/api/admin/dashboard",
   adminAuth,
   (req, res) => {
 
-    const totalDeposits =
-      db.transactions
-        .filter(
-          tx =>
-            tx.type === "DEPOSIT" &&
-            tx.status === "COMPLETED"
-        )
-        .reduce(
-          (sum, tx) =>
-            sum + Number(tx.amount || 0),
-          0
-        );
-
-    const pendingWithdrawals =
-      db.withdrawals
-        .filter(
-          w =>
-            w.status === "PENDING"
-        )
-        .length;
-
     res.json({
-
       success: true,
 
-      statistics: {
-
+      stats: {
         users:
           db.users.length,
 
-        totalDeposits,
+        transactions:
+          db.transactions.length,
 
-        pendingWithdrawals,
+        withdrawals:
+          db.withdrawals.length,
 
-        totalTrades:
+        trades:
           db.trades.length
-
       },
 
       users:
-        db.users.map(user => ({
-
-          id: user.id,
-
-          name: user.name,
-
-          email: user.email,
-
-          phone: user.phone || "",
-
-          balance:
-            Number(user.balance || 0),
-
-          createdAt:
-            user.createdAt
-
-        })),
-
-      withdrawals:
-        db.withdrawals,
+        db.users.map(
+          safeUser
+        ),
 
       transactions:
         db.transactions,
 
+      withdrawals:
+        db.withdrawals,
+
       trades:
         db.trades
-
     });
-
   }
 );
 
-
-/* =====================================================
+/* =========================================================
    ADMIN APPROVE WITHDRAWAL
-===================================================== */
+========================================================= */
 
 app.post(
   "/api/admin/withdrawals/:id/approve",
   adminAuth,
   (req, res) => {
 
-    try {
-
-      const withdrawal =
-        db.withdrawals.find(
-          w =>
-            w.id ===
-            req.params.id
-        );
-
-      if (!withdrawal) {
-        return res.status(404).json({
-          success: false,
-          message: "Withdrawal not found."
-        });
-      }
-
-      if (
-        withdrawal.status !==
-        "PENDING"
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "This withdrawal has already been processed."
-        });
-      }
-
-      /*
-        IMPORTANT:
-        This changes the request to
-        APPROVED_FOR_PAYMENT.
-
-        It does NOT send money through
-        Safaricom B2C yet.
-      */
-
-      withdrawal.status =
-        "APPROVED_FOR_PAYMENT";
-
-      withdrawal.approvedAt =
-        new Date().toISOString();
-
-      const transaction =
-        db.transactions.find(
-          tx =>
-            tx.withdrawalId ===
-            withdrawal.id
-        );
-
-      if (transaction) {
-        transaction.status =
-          "APPROVED_FOR_PAYMENT";
-      }
-
-      saveDB();
-
-      res.json({
-        success: true,
-        message:
-          "Withdrawal approved for payment processing. Actual M-Pesa payout is not connected yet.",
-        withdrawal
-      });
-
-    } catch (error) {
-
-      console.error(
-        "APPROVE ERROR:",
-        error
+    const withdrawal =
+      db.withdrawals.find(
+        w =>
+          w.id ===
+          req.params.id
       );
 
-      res.status(500).json({
+    if (!withdrawal) {
+      return res.status(404).json({
         success: false,
         message:
-          "Unable to approve withdrawal."
+          "Withdrawal not found."
       });
     }
 
+    if (
+      withdrawal.status !==
+      "PENDING"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Withdrawal is already processed."
+      });
+    }
+
+    withdrawal.status =
+      "APPROVED_FOR_PAYMENT";
+
+    withdrawal.approvedAt =
+      new Date().toISOString();
+
+    const transaction =
+      db.transactions.find(
+        t =>
+          t.withdrawalId ===
+          withdrawal.id
+      );
+
+    if (transaction) {
+      transaction.status =
+        "APPROVED_FOR_PAYMENT";
+    }
+
+    saveDB();
+
+    res.json({
+      success: true,
+      message:
+        "Withdrawal approved for payment.",
+      withdrawal
+    });
   }
 );
 
-
-/* =====================================================
+/* =========================================================
    ADMIN REJECT WITHDRAWAL
-===================================================== */
+========================================================= */
 
 app.post(
   "/api/admin/withdrawals/:id/reject",
   adminAuth,
   (req, res) => {
 
-    try {
-
-      const withdrawal =
-        db.withdrawals.find(
-          w =>
-            w.id ===
-            req.params.id
-        );
-
-      if (!withdrawal) {
-        return res.status(404).json({
-          success: false,
-          message: "Withdrawal not found."
-        });
-      }
-
-      if (
-        withdrawal.status !==
-        "PENDING"
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "This withdrawal has already been processed."
-        });
-      }
-
-      const user =
-        db.users.find(
-          u =>
-            u.id ===
-            withdrawal.userId
-        );
-
-      if (user) {
-
-        user.balance =
-          Number(user.balance || 0) +
-          Number(withdrawal.amount || 0);
-
-      }
-
-      withdrawal.status =
-        "REJECTED";
-
-      withdrawal.rejectedAt =
-        new Date().toISOString();
-
-      const transaction =
-        db.transactions.find(
-          tx =>
-            tx.withdrawalId ===
-            withdrawal.id
-        );
-
-      if (transaction) {
-        transaction.status =
-          "REJECTED";
-      }
-
-      saveDB();
-
-      res.json({
-        success: true,
-        message:
-          "Withdrawal rejected and the balance has been returned to the user.",
-        withdrawal
-      });
-
-    } catch (error) {
-
-      console.error(
-        "REJECT ERROR:",
-        error
+    const withdrawal =
+      db.withdrawals.find(
+        w =>
+          w.id ===
+          req.params.id
       );
 
-      res.status(500).json({
+    if (!withdrawal) {
+      return res.status(404).json({
         success: false,
         message:
-          "Unable to reject withdrawal."
+          "Withdrawal not found."
       });
     }
 
+    if (
+      withdrawal.status !==
+      "PENDING"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Withdrawal is already processed."
+      });
+    }
+
+    const user =
+      db.users.find(
+        u =>
+          u.id ===
+          withdrawal.userId
+      );
+
+    if (user) {
+      user.balance =
+        Number(user.balance || 0) +
+        Number(withdrawal.amount);
+    }
+
+    withdrawal.status =
+      "REJECTED";
+
+    withdrawal.rejectedAt =
+      new Date().toISOString();
+
+    const transaction =
+      db.transactions.find(
+        t =>
+          t.withdrawalId ===
+          withdrawal.id
+      );
+
+    if (transaction) {
+      transaction.status =
+        "REJECTED";
+    }
+
+    saveDB();
+
+    res.json({
+      success: true,
+      message:
+        "Withdrawal rejected and balance restored.",
+      withdrawal
+    });
   }
 );
 
+/* =========================================================
+   404 API
+========================================================= */
 
-/* =====================================================
-   START SERVER
-===================================================== */
+app.use(
+  "/api",
+  (req, res) => {
+    res.status(404).json({
+      success: false,
+      message:
+        "API endpoint not found."
+    });
+  }
+);
+
+/* =========================================================
+   SERVER
+========================================================= */
 
 app.listen(
   PORT,
-  "0.0.0.0",
   () => {
-
     console.log(
-      `Vertex FX running on port ${PORT}`
+      "Vertex FX running on port " +
+      PORT
     );
 
+    console.log(
+      "M-Pesa configured:",
+      mpesaConfigured()
+    );
+
+    console.log(
+      "M-Pesa environment:",
+      process.env.MPESA_ENV ||
+        "sandbox"
+    );
   }
 );

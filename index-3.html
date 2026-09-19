@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>VertexFX</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;background:#07111f;color:#eef5ff;line-height:1.4}
+button,input,select{font:inherit}
+.top{height:64px;background:#091522;border-bottom:1px solid #1a2d42;display:flex;align-items:center;padding:0 16px;gap:10px;position:sticky;top:0;z-index:5}
+.logo{display:flex;align-items:center;gap:8px;font-size:20px;font-weight:800}.v{width:32px;height:32px;border-radius:9px;background:#1688e8;display:grid;place-items:center}.fx{color:#55b9ff}
+.badge{font-size:10px;background:#102940;color:#62c1ff;border:1px solid #245072;border-radius:20px;padding:5px 8px;font-weight:bold}
+.account{margin-left:auto;background:#102033;color:#fff;border:1px solid #294058;border-radius:8px;padding:8px 10px}
+.wrap{max-width:1100px;margin:auto;padding:18px 14px 30px}
+.nav{display:flex;gap:7px;overflow:auto;padding:2px 0 15px}.nav button{white-space:nowrap;border:1px solid #1d334a;background:#0c1b2b;color:#9eb3c7;border-radius:8px;padding:8px 11px}.nav .on{background:#123453;color:#fff}
+.hero{display:flex;justify-content:space-between;gap:14px;align-items:center;margin:5px 0 20px}.eyebrow{font-size:10px;color:#55b9ff;font-weight:bold;letter-spacing:1.5px}.hero h1{font-size:29px;line-height:1.1;margin:5px 0}.hero h1 span{color:#55b9ff}.muted{color:#8197ab;font-size:13px}.primary{background:#1688e8;border:0;color:white;border-radius:9px;padding:11px 15px;font-weight:bold;white-space:nowrap}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.card,.panel{background:#0b1928;border:1px solid #1a3046;border-radius:12px}.card{padding:14px}.card small{color:#8298ac;display:block;font-size:11px}.card strong{display:block;font-size:19px;margin-top:5px}.card em{font-style:normal;color:#5d7489;font-size:10px}
+.grid{display:grid;grid-template-columns:1.65fr 1fr;gap:12px}.panel{padding:14px;margin-bottom:12px}.head{display:flex;justify-content:space-between;align-items:center}.head h2{font-size:16px;margin:0}.head p{font-size:11px;color:#71889d;margin:3px 0 0}.price{font-size:19px;font-weight:bold}
+.chart{margin-top:12px;height:250px;overflow:hidden}.chart svg{width:100%;height:215px;color:#55b9ff}.axis{display:flex;justify-content:space-between;color:#587086;font-size:10px}
+label{display:block;color:#91a7ba;font-size:11px;margin:12px 0 0}input,select{width:100%;margin-top:5px;padding:10px;border-radius:7px;border:1px solid #274058;background:#071522;color:#fff;outline:none}.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}.actions button{border:0;color:white;padding:11px;border-radius:8px;font-weight:bold}.sell{background:#d64d62}.buy{background:#1688e8}.msg{font-size:11px;color:#688096;min-height:20px}
+.rows{margin-top:10px}.row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:11px 3px;border-top:1px solid #172c40;font-size:12px}.th{color:#6e8599;font-size:10px}.up{color:#52c48b}.down{color:#ec7180}
+footer{text-align:center;color:#516a80;font-size:10px;padding:10px 0 20px}
+@media(max-width:760px){.wrap{padding:14px 10px 25px}.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.hero{align-items:flex-start}.hero h1{font-size:25px}.primary{margin-top:4px}.chart{height:220px}.chart svg{height:185px}}
+@media(max-width:430px){.top{padding:0 11px}.logo{font-size:18px}.badge{font-size:9px}.account{font-size:11px}.hero{display:block}.primary{width:100%;margin-top:12px}.cards{gap:7px}.card{padding:11px}.card strong{font-size:17px}.two{grid-template-columns:1fr}.row{grid-template-columns:1.5fr 1fr 1fr 1fr;font-size:11px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="logo"><span class="v">V</span>Vertex<span class="fx">FX</span></div><span class="badge">DEMO MODE</span><button class="account">Account ▾</button></header>
+<main class="wrap">
+<nav class="nav"><button class="on">Dashboard</button><button>Trade</button><button>Markets</button><button>Positions</button><button>Transactions</button><button>Deposit</button><button>Withdraw</button><button>KYC</button></nav>
+<section class="hero"><div><div class="eyebrow">WELCOME TO VERTEXFX</div><h1>Trade smarter. <span>Stay in control.</span></h1><div class="muted">A modern broker-connected trading platform.</div></div><button class="primary" onclick="document.getElementById('trade').scrollIntoView({behavior:'smooth'})">Open Trade</button></section>
+<section class="cards">
+<div class="card"><small>Account Balance</small><strong>$10,000.00</strong><em>Demo account</em></div>
+<div class="card"><small>Equity</small><strong>$10,000.00</strong><em>+0.00%</em></div>
+<div class="card"><small>Free Margin</small><strong>$10,000.00</strong><em>Available</em></div>
+<div class="card"><small>Open Positions</small><strong id="pos">0</strong><em>Active trades</em></div>
+</section>
+<section class="grid">
+<div class="panel"><div class="head"><div><h2>EUR/USD</h2><p>Market chart interface</p></div><span class="price" id="price">1.16842</span></div>
+<div class="chart"><svg viewBox="0 0 900 330" preserveAspectRatio="none"><path d="M0 250 L55 225 L95 245 L145 185 L200 205 L255 150 L310 170 L365 115 L420 145 L475 105 L530 130 L585 80 L640 105 L700 65 L755 100 L810 55 L900 75 L900 330 L0 330 Z" fill="currentColor" opacity=".08"/><path d="M0 250 L55 225 L95 245 L145 185 L200 205 L255 150 L310 170 L365 115 L420 145 L475 105 L530 130 L585 80 L640 105 L700 65 L755 100 L810 55 L900 75" fill="none" stroke="currentColor" stroke-width="5"/></svg><div class="axis"><span>09:00</span><span>11:00</span><span>13:00</span><span>15:00</span><span>17:00</span></div></div></div>
+<div class="panel" id="trade"><div class="head"><div><h2>Market Order</h2><p>Demo execution only</p></div></div>
+<label>Instrument<select><option>EUR/USD</option><option>GBP/USD</option><option>USD/JPY</option><option>USD/CAD</option></select></label>
+<label>Volume (lots)<input id="vol" type="number" value="0.10" min="0.01" step="0.01"></label>
+<div class="two"><label>Take Profit<input placeholder="Optional"></label><label>Stop Loss<input placeholder="Optional"></label></div>
+<div class="actions"><button class="sell" onclick="order('SELL')">SELL</button><button class="buy" onclick="order('BUY')">BUY</button></div><p class="msg" id="msg">Orders here are simulated.</p></div>
+</section>
+<section class="panel"><div class="head"><div><h2>Market Watch</h2><p>Sample prices for this prototype.</p></div></div><div class="rows">
+<div class="row th"><span>Instrument</span><span>Bid</span><span>Ask</span><span>Change</span></div>
+<div class="row"><span>EUR/USD</span><span>1.16840</span><span>1.16842</span><span class="up">+0.18%</span></div>
+<div class="row"><span>GBP/USD</span><span>1.35310</span><span>1.35316</span><span class="up">+0.22%</span></div>
+<div class="row"><span>USD/JPY</span><span>147.220</span><span>147.235</span><span class="down">-0.11%</span></div>
+<div class="row"><span>USD/CAD</span><span>1.37520</span><span>1.37528</span><span class="up">+0.06%</span></div>
+</div></section>
+<footer>VertexFX prototype • Real-money trading requires an appropriate licensed broker/regulatory arrangement. No guaranteed returns.</footer>
+</main>
+<script>
+let p=0;function order(side){let v=Number(document.getElementById('vol').value);if(v<=0)return;document.getElementById('pos').textContent=++p;document.getElementById('msg').textContent='Demo '+side+' order placed — '+v.toFixed(2)+' lots.'}
+setInterval(()=>document.getElementById('price').textContent=(1.16842+(Math.random()-.5)*.00018).toFixed(5),1800);
+</script>
+</body>
+</html>

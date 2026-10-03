@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vertex FX</title>
+
+  <title>Vertex Earn</title>
 
   <style>
     * {
@@ -19,9 +20,9 @@
 
     .container {
       width: 100%;
-      max-width: 1100px;
+      max-width: 1150px;
       margin: auto;
-      padding: 20px;
+      padding: 18px;
     }
 
     header {
@@ -32,7 +33,7 @@
     }
 
     .logo {
-      font-size: 28px;
+      font-size: 27px;
       font-weight: bold;
     }
 
@@ -42,6 +43,7 @@
 
     .online {
       color: #19e477;
+      font-size: 14px;
     }
 
     .card {
@@ -54,7 +56,7 @@
 
     .auth {
       max-width: 520px;
-      margin: 50px auto;
+      margin: 45px auto;
     }
 
     .tabs {
@@ -70,6 +72,11 @@
       background: #132943;
       color: #dce8f8;
       cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      opacity: 0.9;
     }
 
     button.active,
@@ -91,7 +98,9 @@
       color: #b9c9dc;
     }
 
-    input {
+    input,
+    textarea,
+    select {
       width: 100%;
       padding: 13px;
       border: 1px solid #294765;
@@ -101,7 +110,14 @@
       outline: none;
     }
 
-    input:focus {
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
       border-color: #19e477;
     }
 
@@ -128,8 +144,8 @@
       display: flex;
       gap: 8px;
       overflow-x: auto;
-      margin: 10px 0;
-      padding-bottom: 5px;
+      margin: 10px 0 20px;
+      padding-bottom: 6px;
     }
 
     .navigation button {
@@ -160,9 +176,102 @@
       color: #91a6bd;
     }
 
+    .hero {
+      text-align: center;
+      padding: 35px 15px;
+    }
+
+    .hero h1 {
+      font-size: 42px;
+      margin-bottom: 10px;
+    }
+
+    .hero h1 span {
+      color: #19e477;
+    }
+
+    .hero p {
+      color: #91a6bd;
+      max-width: 650px;
+      margin: auto;
+      line-height: 1.6;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 25px;
+    }
+
+    .hero-buttons button {
+      min-width: 170px;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(
+        auto-fit,
+        minmax(220px, 1fr)
+      );
+      gap: 15px;
+    }
+
+    .product {
+      background: #0d1d32;
+      border: 1px solid #1d3653;
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .product-image {
+      height: 130px;
+      border-radius: 12px;
+      background: #132943;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 45px;
+      margin-bottom: 15px;
+    }
+
+    .product h3 {
+      margin: 5px 0;
+    }
+
+    .price {
+      color: #19e477;
+      font-size: 21px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .commission {
+      color: #78f1aa;
+      font-size: 13px;
+    }
+
+    .referral-box {
+      background: #071426;
+      border: 1px dashed #19e477;
+      padding: 15px;
+      border-radius: 12px;
+      word-break: break-all;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 20px;
+      background: #132943;
+      font-size: 12px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
+      overflow-x: auto;
     }
 
     th,
@@ -172,6 +281,31 @@
       border-bottom: 1px solid #1c334d;
     }
 
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(
+        auto-fit,
+        minmax(180px, 1fr)
+      );
+      gap: 14px;
+    }
+
+    .step {
+      text-align: center;
+      padding: 18px;
+      background: #132943;
+      border-radius: 14px;
+    }
+
+    .step-icon {
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+
     footer {
       text-align: center;
       color: #6f849c;
@@ -179,17 +313,29 @@
     }
 
     @media (max-width: 600px) {
+
       .container {
         padding: 12px;
       }
 
       .logo {
-        font-size: 24px;
+        font-size: 23px;
       }
 
       .card {
         padding: 17px;
       }
+
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      th,
+      td {
+        font-size: 13px;
+        padding: 8px;
+      }
+
     }
   </style>
 </head>
@@ -198,29 +344,34 @@
 
 <div class="container">
 
+  <!-- HEADER -->
+
   <header>
+
     <div class="logo">
-      <span>Vertex</span> FX
+      <span>Vertex</span> Earn
     </div>
 
     <div class="online">
       ● Online
     </div>
+
   </header>
 
 
   <!-- =========================
-       LOGIN / REGISTER
+       AUTH SECTION
   ========================== -->
 
   <section id="authSection" class="auth">
 
     <div class="card">
 
-      <h1>Vertex FX</h1>
+      <h1>Vertex Earn</h1>
 
       <p class="muted">
-        Trading & Wallet Platform
+        Shop, sell products and earn commissions
+        from genuine sales.
       </p>
 
 
@@ -256,7 +407,6 @@
           placeholder="you@example.com"
         >
 
-
         <label>Password</label>
 
         <input
@@ -264,7 +414,6 @@
           type="password"
           placeholder="Password"
         >
-
 
         <button
           class="primary"
@@ -288,7 +437,6 @@
           placeholder="Full name"
         >
 
-
         <label>Email</label>
 
         <input
@@ -296,7 +444,6 @@
           type="email"
           placeholder="you@example.com"
         >
-
 
         <label>M-Pesa Phone</label>
 
@@ -306,7 +453,6 @@
           placeholder="2547XXXXXXXX"
         >
 
-
         <label>Password</label>
 
         <input
@@ -314,7 +460,6 @@
           type="password"
           placeholder="Minimum 6 characters"
         >
-
 
         <button
           class="primary"
@@ -336,9 +481,8 @@
   </section>
 
 
-
   <!-- =========================
-       MAIN APPLICATION
+       APPLICATION
   ========================== -->
 
   <section
@@ -346,18 +490,29 @@
     class="hidden"
   >
 
+
+    <!-- NAVIGATION -->
+
     <div class="navigation">
 
       <button onclick="showPage('dashboard')">
-        Dashboard
+        Home
       </button>
 
-      <button onclick="showPage('deposit')">
-        Deposit
+      <button onclick="showPage('shop')">
+        Shop
       </button>
 
-      <button onclick="showPage('withdraw')">
-        Withdraw
+      <button onclick="showPage('sell')">
+        Sell
+      </button>
+
+      <button onclick="showPage('earn')">
+        Earn
+      </button>
+
+      <button onclick="showPage('wallet')">
+        Wallet
       </button>
 
       <button onclick="showPage('transactions')">
@@ -374,10 +529,43 @@
     </div>
 
 
-
-    <!-- DASHBOARD -->
+    <!-- =========================
+         HOME / DASHBOARD
+    ========================== -->
 
     <div id="dashboardPage">
+
+      <div class="card hero">
+
+        <h1>
+          Earn <span>•</span> Sell <span>•</span> Grow
+        </h1>
+
+        <p>
+          Buy products, sell your own products,
+          and earn commissions by referring
+          real customers.
+        </p>
+
+        <div class="hero-buttons">
+
+          <button
+            class="primary"
+            onclick="showPage('shop')"
+          >
+            Start Shopping
+          </button>
+
+          <button
+            onclick="showPage('earn')"
+          >
+            Start Earning
+          </button>
+
+        </div>
+
+      </div>
+
 
       <div class="card">
 
@@ -386,82 +574,8 @@
         </div>
 
         <h2 id="userName">
-          Trader
+          User
         </h2>
-
-        <p class="muted">
-          DEMO MODE
-        </p>
-
-      </div>
-
-
-      <div class="grid">
-
-        <div class="card">
-
-          <div class="muted">
-            Balance
-          </div>
-
-          <div
-            id="balance"
-            class="metric"
-          >
-            KES 0.00
-          </div>
-
-        </div>
-
-
-        <div class="card">
-
-          <div class="muted">
-            Equity
-          </div>
-
-          <div
-            id="equity"
-            class="metric"
-          >
-            KES 0.00
-          </div>
-
-        </div>
-
-
-        <div class="card">
-
-          <div class="muted">
-            Free Margin
-          </div>
-
-          <div
-            id="freeMargin"
-            class="metric"
-          >
-            KES 0.00
-          </div>
-
-        </div>
-
-
-        <div class="card">
-
-          <div class="muted">
-            EUR/USD
-          </div>
-
-          <div class="metric">
-            1.16834
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="card">
 
         <p
           id="userEmail"
@@ -475,101 +589,481 @@
 
       </div>
 
+
+      <div class="grid">
+
+        <div class="card">
+
+          <div class="muted">
+            Available Earnings
+          </div>
+
+          <div
+            id="earnings"
+            class="metric"
+          >
+            KES 0.00
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <div class="muted">
+            Total Sales
+          </div>
+
+          <div
+            id="sales"
+            class="metric"
+          >
+            KES 0.00
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <div class="muted">
+            Commission Earned
+          </div>
+
+          <div
+            id="commission"
+            class="metric"
+          >
+            KES 0.00
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <div class="muted">
+            Referrals
+          </div>
+
+          <div
+            id="referrals"
+            class="metric"
+          >
+            0
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- HOW IT WORKS -->
+
+      <div class="card">
+
+        <h2>
+          How Vertex Earn Works
+        </h2>
+
+        <div class="steps">
+
+          <div class="step">
+            <div class="step-icon">🛍️</div>
+            <strong>Shop</strong>
+            <p class="muted">
+              Discover products.
+            </p>
+          </div>
+
+          <div class="step">
+            <div class="step-icon">🏪</div>
+            <strong>Sell</strong>
+            <p class="muted">
+              List your products.
+            </p>
+          </div>
+
+          <div class="step">
+            <div class="step-icon">🔗</div>
+            <strong>Refer</strong>
+            <p class="muted">
+              Share your referral links.
+            </p>
+          </div>
+
+          <div class="step">
+            <div class="step-icon">💰</div>
+            <strong>Earn</strong>
+            <p class="muted">
+              Earn from genuine sales.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
 
 
-
-    <!-- DEPOSIT -->
+    <!-- =========================
+         SHOP
+    ========================== -->
 
     <div
-      id="depositPage"
-      class="card hidden"
+      id="shopPage"
+      class="hidden"
     >
 
-      <h2>
-        M-Pesa Deposit
-      </h2>
+      <div class="card">
 
-      <p class="muted">
-        Send an M-Pesa sandbox STK Push.
-      </p>
+        <h2>Marketplace</h2>
 
+        <p class="muted">
+          Browse products available on Vertex Earn.
+        </p>
 
-      <label>
-        Amount (KES)
-      </label>
-
-      <input
-        id="depositAmount"
-        type="number"
-        min="1"
-        value="1"
-      >
-
-
-      <button
-        class="primary"
-        onclick="deposit()"
-      >
-        Send M-Pesa Prompt
-      </button>
+      </div>
 
 
       <div
-        id="depositMessage"
+        id="productGrid"
+        class="product-grid"
+      >
+
+        <div class="product">
+
+          <div class="product-image">
+            📚
+          </div>
+
+          <h3>
+            Online Business Guide
+          </h3>
+
+          <p class="muted">
+            Digital business learning guide.
+          </p>
+
+          <div class="price">
+            KES 1,500
+          </div>
+
+          <div class="commission">
+            Affiliate commission: 20%
+          </div>
+
+          <button
+            class="primary"
+            onclick="buyProduct('Online Business Guide',1500)"
+          >
+            Buy Now
+          </button>
+
+        </div>
+
+
+        <div class="product">
+
+          <div class="product-image">
+            🌱
+          </div>
+
+          <h3>
+            Farming Guide
+          </h3>
+
+          <p class="muted">
+            Practical farming information.
+          </p>
+
+          <div class="price">
+            KES 1,000
+          </div>
+
+          <div class="commission">
+            Affiliate commission: 15%
+          </div>
+
+          <button
+            class="primary"
+            onclick="buyProduct('Farming Guide',1000)"
+          >
+            Buy Now
+          </button>
+
+        </div>
+
+
+        <div class="product">
+
+          <div class="product-image">
+            💻
+          </div>
+
+          <h3>
+            Digital Skills Course
+          </h3>
+
+          <p class="muted">
+            Learn useful online skills.
+          </p>
+
+          <div class="price">
+            KES 2,000
+          </div>
+
+          <div class="commission">
+            Affiliate commission: 20%
+          </div>
+
+          <button
+            class="primary"
+            onclick="buyProduct('Digital Skills Course',2000)"
+          >
+            Buy Now
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="purchaseMessage"
         class="message hidden"
       ></div>
 
     </div>
 
 
-
-    <!-- WITHDRAW -->
+    <!-- =========================
+         SELL
+    ========================== -->
 
     <div
-      id="withdrawPage"
+      id="sellPage"
       class="card hidden"
     >
 
       <h2>
-        Withdraw
+        Sell a Product
       </h2>
 
       <p class="muted">
-        Submit a withdrawal request.
+        Create a product listing for the marketplace.
       </p>
 
 
       <label>
-        Amount (KES)
+        Product Name
       </label>
 
       <input
-        id="withdrawAmount"
+        id="productName"
+        type="text"
+        placeholder="Product name"
+      >
+
+
+      <label>
+        Description
+      </label>
+
+      <textarea
+        id="productDescription"
+        placeholder="Describe your product"
+      ></textarea>
+
+
+      <label>
+        Price (KES)
+      </label>
+
+      <input
+        id="productPrice"
         type="number"
         min="1"
-        value="1"
+        placeholder="1500"
+      >
+
+
+      <label>
+        Affiliate Commission (%)
+      </label>
+
+      <input
+        id="productCommission"
+        type="number"
+        min="0"
+        max="50"
+        value="10"
       >
 
 
       <button
         class="primary"
-        onclick="withdraw()"
+        onclick="createProduct()"
       >
-        Request Withdrawal
+        Publish Product
       </button>
 
 
       <div
-        id="withdrawMessage"
+        id="sellMessage"
         class="message hidden"
       ></div>
 
     </div>
 
 
+    <!-- =========================
+         EARN
+    ========================== -->
 
-    <!-- TRANSACTIONS -->
+    <div
+      id="earnPage"
+      class="card hidden"
+    >
+
+      <h2>
+        Earn Commissions
+      </h2>
+
+      <p class="muted">
+        Share products with your referral link.
+        Earn commissions when customers make
+        qualifying purchases.
+      </p>
+
+
+      <h3>
+        Your Referral Link
+      </h3>
+
+      <div
+        id="referralLink"
+        class="referral-box"
+      >
+        Loading...
+      </div>
+
+
+      <button
+        class="primary"
+        onclick="copyReferralLink()"
+      >
+        Copy Referral Link
+      </button>
+
+
+      <div class="grid">
+
+        <div class="card">
+
+          <div class="muted">
+            Total Referrals
+          </div>
+
+          <div
+            id="earnReferrals"
+            class="metric"
+          >
+            0
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <div class="muted">
+            Commission
+          </div>
+
+          <div
+            id="earnCommission"
+            class="metric"
+          >
+            KES 0.00
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         WALLET
+    ========================== -->
+
+    <div
+      id="walletPage"
+      class="hidden"
+    >
+
+      <div class="card">
+
+        <h2>
+          Wallet
+        </h2>
+
+        <div class="metric">
+          <span id="walletBalance">
+            KES 0.00
+          </span>
+        </div>
+
+        <p class="muted">
+          Available earnings from qualifying
+          sales and commissions.
+        </p>
+
+      </div>
+
+
+      <div class="card">
+
+        <h2>
+          Withdraw to M-Pesa
+        </h2>
+
+        <label>
+          Amount (KES)
+        </label>
+
+        <input
+          id="withdrawAmount"
+          type="number"
+          min="1"
+          placeholder="100"
+        >
+
+
+        <button
+          class="primary"
+          onclick="withdraw()"
+        >
+          Request Withdrawal
+        </button>
+
+
+        <div
+          id="withdrawMessage"
+          class="message hidden"
+        ></div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         TRANSACTIONS
+    ========================== -->
 
     <div
       id="transactionsPage"
@@ -581,33 +1075,38 @@
       </h2>
 
 
-      <table>
+      <div class="table-wrapper">
 
-        <thead>
+        <table>
 
-          <tr>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Status</th>
-            <th>Date</th>
-          </tr>
+          <thead>
 
-        </thead>
+            <tr>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+
+          </thead>
 
 
-        <tbody id="transactionRows">
+          <tbody id="transactionRows">
 
-        </tbody>
+          </tbody>
 
-      </table>
+        </table>
+
+      </div>
 
     </div>
+
 
   </section>
 
 
   <footer>
-    Vertex FX © 2026
+    Vertex Earn © 2026
   </footer>
 
 </div>
@@ -617,7 +1116,7 @@
 <script>
 
 /* =========================================
-   BACKEND ADDRESS
+   BACKEND
 ========================================= */
 
 const API_BASE =
@@ -625,7 +1124,7 @@ const API_BASE =
 
 
 /* =========================================
-   USER SESSION
+   SESSION
 ========================================= */
 
 let token =
@@ -635,7 +1134,7 @@ let currentUser = null;
 
 
 /* =========================================
-   API FUNCTION
+   API
 ========================================= */
 
 async function api(
@@ -731,12 +1230,10 @@ function showMessage(
   const element =
     document.getElementById(id);
 
+  if (!element) return;
+
   element.textContent =
     message;
-
-  element.classList.remove(
-    "hidden"
-  );
 
   element.className =
     "message " +
@@ -750,7 +1247,7 @@ function showMessage(
 
 
 /* =========================================
-   LOGIN / REGISTER TABS
+   TABS
 ========================================= */
 
 function showTab(type) {
@@ -846,6 +1343,15 @@ async function register() {
     }
 
 
+    if (password.length < 6) {
+
+      throw new Error(
+        "Password must be at least 6 characters."
+      );
+
+    }
+
+
     const data =
       await api(
         "/api/register",
@@ -908,6 +1414,15 @@ async function login() {
       document
         .getElementById("loginPassword")
         .value;
+
+
+    if (!email || !password) {
+
+      throw new Error(
+        "Enter your email and password."
+      );
+
+    }
 
 
     const data =
@@ -978,30 +1493,37 @@ async function loadApplication() {
     document
       .getElementById("userName")
       .textContent =
-      currentUser.name;
+      currentUser.name ||
+      "User";
 
 
     document
       .getElementById("userEmail")
       .textContent =
-      currentUser.email;
+      currentUser.email ||
+      "";
 
 
     document
       .getElementById("userPhone")
       .textContent =
-      currentUser.phone;
+      currentUser.phone ||
+      "";
 
 
-    updateBalance();
+    updateDashboard();
+
 
     await loadTransactions();
+
 
     showPage("dashboard");
 
   }
 
   catch (error) {
+
+    console.log(error);
 
     logout();
 
@@ -1011,38 +1533,109 @@ async function loadApplication() {
 
 
 /* =========================================
-   BALANCE
+   DASHBOARD DATA
 ========================================= */
 
-function updateBalance() {
+function updateDashboard() {
 
-  const amount =
+  const balance =
     Number(
       currentUser.balance || 0
     );
 
 
-  const formatted =
+  const earnings =
+    Number(
+      currentUser.earnings ||
+      balance ||
+      0
+    );
+
+
+  const sales =
+    Number(
+      currentUser.sales || 0
+    );
+
+
+  const commission =
+    Number(
+      currentUser.commission ||
+      0
+    );
+
+
+  const referrals =
+    Number(
+      currentUser.referrals ||
+      0
+    );
+
+
+  document
+    .getElementById("earnings")
+    .textContent =
+    money(earnings);
+
+
+  document
+    .getElementById("walletBalance")
+    .textContent =
+    money(earnings);
+
+
+  document
+    .getElementById("sales")
+    .textContent =
+    money(sales);
+
+
+  document
+    .getElementById("commission")
+    .textContent =
+    money(commission);
+
+
+  document
+    .getElementById("referrals")
+    .textContent =
+    referrals;
+
+
+  document
+    .getElementById("earnReferrals")
+    .textContent =
+    referrals;
+
+
+  document
+    .getElementById("earnCommission")
+    .textContent =
+    money(commission);
+
+
+  createReferralLink();
+
+}
+
+
+/* =========================================
+   MONEY
+========================================= */
+
+function money(amount) {
+
+  return (
     "KES " +
-    amount.toFixed(2);
-
-
-  document
-    .getElementById("balance")
-    .textContent =
-    formatted;
-
-
-  document
-    .getElementById("equity")
-    .textContent =
-    formatted;
-
-
-  document
-    .getElementById("freeMargin")
-    .textContent =
-    formatted;
+    Number(amount || 0)
+      .toLocaleString(
+        "en-KE",
+        {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }
+      )
+  );
 
 }
 
@@ -1055,8 +1648,10 @@ function showPage(page) {
 
   const pages = [
     "dashboard",
-    "deposit",
-    "withdraw",
+    "shop",
+    "sell",
+    "earn",
+    "wallet",
     "transactions"
   ];
 
@@ -1064,59 +1659,126 @@ function showPage(page) {
   pages.forEach(
     function(item) {
 
-      document
-        .getElementById(
+      const element =
+        document.getElementById(
           item + "Page"
-        )
-        .classList
-        .toggle(
+        );
+
+      if (element) {
+
+        element.classList.toggle(
           "hidden",
           item !== page
         );
 
+      }
+
     }
   );
+
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
 
 }
 
 
 /* =========================================
-   M-PESA DEPOSIT
+   REFERRAL LINK
 ========================================= */
 
-async function deposit() {
+function createReferralLink() {
+
+  const userId =
+    currentUser.id ||
+    currentUser._id ||
+    currentUser.email;
+
+
+  const link =
+    window.location.origin +
+    "/?ref=" +
+    encodeURIComponent(
+      String(userId)
+    );
+
+
+  document
+    .getElementById("referralLink")
+    .textContent =
+    link;
+
+}
+
+
+/* =========================================
+   COPY REFERRAL LINK
+========================================= */
+
+async function copyReferralLink() {
+
+  const link =
+    document
+      .getElementById(
+        "referralLink"
+      )
+      .textContent;
+
 
   try {
 
-    const amount =
-      Number(
-        document
-          .getElementById(
-            "depositAmount"
-          )
-          .value
-      );
+    await navigator.clipboard.writeText(
+      link
+    );
 
 
-    if (amount < 1) {
+    alert(
+      "Referral link copied!"
+    );
 
-      throw new Error(
-        "Enter a valid amount."
-      );
+  }
 
-    }
+  catch (error) {
 
+    alert(
+      "Copy failed. Please copy the link manually."
+    );
+
+  }
+
+}
+
+
+/* =========================================
+   BUY PRODUCT
+========================================= */
+
+async function buyProduct(
+  productName,
+  amount
+) {
+
+  try {
+
+    /*
+      This calls the backend order endpoint.
+
+      The backend must verify the product,
+      calculate the affiliate commission,
+      create the order and initiate payment.
+    */
 
     const data =
       await api(
-        "/api/mpesa/deposit",
+        "/api/orders",
         {
           method: "POST",
 
           body: JSON.stringify({
-            amount,
-            phone:
-              currentUser.phone
+            productName,
+            amount
           })
 
         }
@@ -1124,21 +1786,151 @@ async function deposit() {
 
 
     showMessage(
-      "depositMessage",
+      "purchaseMessage",
       data.message ||
-      "M-Pesa prompt sent.",
+      "Order created. Continue with payment.",
       true
     );
 
 
-    await loadTransactions();
+    showPage("shop");
 
   }
 
   catch (error) {
 
     showMessage(
-      "depositMessage",
+      "purchaseMessage",
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================================
+   CREATE PRODUCT
+========================================= */
+
+async function createProduct() {
+
+  try {
+
+    const name =
+      document
+        .getElementById("productName")
+        .value
+        .trim();
+
+
+    const description =
+      document
+        .getElementById("productDescription")
+        .value
+        .trim();
+
+
+    const price =
+      Number(
+        document
+          .getElementById("productPrice")
+          .value
+      );
+
+
+    const commission =
+      Number(
+        document
+          .getElementById("productCommission")
+          .value
+      );
+
+
+    if (!name) {
+
+      throw new Error(
+        "Enter a product name."
+      );
+
+    }
+
+
+    if (!description) {
+
+      throw new Error(
+        "Enter a product description."
+      );
+
+    }
+
+
+    if (price <= 0) {
+
+      throw new Error(
+        "Enter a valid price."
+      );
+
+    }
+
+
+    if (
+      commission < 0 ||
+      commission > 50
+    ) {
+
+      throw new Error(
+        "Commission must be between 0% and 50%."
+      );
+
+    }
+
+
+    const data =
+      await api(
+        "/api/products",
+        {
+          method: "POST",
+
+          body: JSON.stringify({
+            name,
+            description,
+            price,
+            commission
+          })
+
+        }
+      );
+
+
+    showMessage(
+      "sellMessage",
+      data.message ||
+      "Product submitted successfully.",
+      true
+    );
+
+
+    document
+      .getElementById("productName")
+      .value = "";
+
+
+    document
+      .getElementById("productDescription")
+      .value = "";
+
+
+    document
+      .getElementById("productPrice")
+      .value = "";
+
+  }
+
+  catch (error) {
+
+    showMessage(
+      "sellMessage",
       error.message
     );
 
@@ -1165,10 +1957,10 @@ async function withdraw() {
       );
 
 
-    if (amount < 1) {
+    if (amount <= 0) {
 
       throw new Error(
-        "Enter a valid amount."
+        "Enter a valid withdrawal amount."
       );
 
     }
@@ -1191,14 +1983,15 @@ async function withdraw() {
     showMessage(
       "withdrawMessage",
       data.message ||
-      "Withdrawal request received.",
+      "Withdrawal request submitted.",
       true
     );
 
 
     await loadApplication();
 
-    showPage("withdraw");
+
+    showPage("wallet");
 
   }
 
@@ -1259,29 +2052,43 @@ async function loadTransactions() {
           function(transaction) {
 
             return (
+
               "<tr>" +
 
               "<td>" +
-              transaction.type +
+              escapeHTML(
+                transaction.type ||
+                "Transaction"
+              ) +
               "</td>" +
 
-              "<td>KES " +
-              Number(
+              "<td>" +
+              money(
                 transaction.amount
-              ).toFixed(2) +
+              ) +
               "</td>" +
 
               "<td>" +
-              transaction.status +
+              "<span class='status'>" +
+              escapeHTML(
+                transaction.status ||
+                "Pending"
+              ) +
+              "</span>" +
               "</td>" +
 
               "<td>" +
-              new Date(
+              (
                 transaction.createdAt
-              ).toLocaleString() +
+                  ? new Date(
+                      transaction.createdAt
+                    ).toLocaleString()
+                  : "-"
+              ) +
               "</td>" +
 
               "</tr>"
+
             );
 
           }
@@ -1298,6 +2105,37 @@ async function loadTransactions() {
     );
 
   }
+
+}
+
+
+/* =========================================
+   ESCAPE HTML
+========================================= */
+
+function escapeHTML(value) {
+
+  return String(value)
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 
 }
 
@@ -1333,6 +2171,9 @@ function logout() {
     .classList
     .remove("hidden");
 
+
+  showTab("login");
+
 }
 
 
@@ -1349,4 +2190,4 @@ if (token) {
 </script>
 
 </body>
-</html>
+  </html>

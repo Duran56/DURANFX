@@ -1,424 +1,1352 @@
-const express = require("express");
-const axios = require("axios");
-const cors = require("cors");
-require("dotenv").config();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vertex FX</title>
 
-const app = express();
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-app.use(cors());
-app.use(express.json());
+    body {
+      margin: 0;
+      background: #071426;
+      color: #eef4ff;
+      font-family: Arial, sans-serif;
+    }
 
-const PORT = process.env.PORT || 3000;
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
+    }
 
-/*
-  DURANFX / VERTEX FX
-  M-PESA DARaja backend
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+    }
 
-  IMPORTANT:
-  Put your Daraja credentials in .env.
-  NEVER put them inside index.html.
-*/
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+    }
 
-let transactions = [];
+    .logo span {
+      color: #19e477;
+    }
 
+    .online {
+      color: #19e477;
+    }
 
-/* =========================
-   HEALTH CHECK
-========================= */
+    .card {
+      background: #0d1d32;
+      border: 1px solid #1d3653;
+      border-radius: 18px;
+      padding: 22px;
+      margin: 16px 0;
+    }
 
-app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
-    service: "Vertex FX payment backend",
-    status: "online"
-  });
-});
+    .auth {
+      max-width: 520px;
+      margin: 50px auto;
+    }
 
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
 
-/* =========================
-   GET DARAJA ACCESS TOKEN
-========================= */
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      background: #132943;
+      color: #dce8f8;
+      cursor: pointer;
+    }
 
-async function getAccessToken() {
+    button.active,
+    .primary {
+      background: #19e477;
+      color: #03120a;
+    }
 
-  const credentials =
-    Buffer.from(
-      process.env.MPESA_CONSUMER_KEY +
-      ":" +
-      process.env.MPESA_CONSUMER_SECRET
-    ).toString("base64");
+    .primary {
+      width: 100%;
+      padding: 14px;
+      font-weight: bold;
+      margin-top: 16px;
+    }
 
-  const response = await axios.get(
-    "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-    {
-      headers: {
-        Authorization: "Basic " + credentials
+    label {
+      display: block;
+      margin: 13px 0 6px;
+      color: #b9c9dc;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #294765;
+      border-radius: 10px;
+      background: #071426;
+      color: white;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #19e477;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 9px;
+      margin-top: 12px;
+      background: #152a44;
+    }
+
+    .error {
+      color: #ff9fa8;
+    }
+
+    .success {
+      color: #78f1aa;
+    }
+
+    .navigation {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin: 10px 0;
+      padding-bottom: 5px;
+    }
+
+    .navigation button {
+      white-space: nowrap;
+    }
+
+    .logout {
+      background: #3a1b24;
+      color: #ffb3bb;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(
+        auto-fit,
+        minmax(210px, 1fr)
+      );
+      gap: 14px;
+    }
+
+    .metric {
+      font-size: 27px;
+      font-weight: bold;
+      margin-top: 7px;
+    }
+
+    .muted {
+      color: #91a6bd;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 11px;
+      border-bottom: 1px solid #1c334d;
+    }
+
+    footer {
+      text-align: center;
+      color: #6f849c;
+      padding: 30px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 12px;
+      }
+
+      .logo {
+        font-size: 24px;
+      }
+
+      .card {
+        padding: 17px;
       }
     }
-  );
+  </style>
+</head>
 
-  return response.data.access_token;
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="logo">
+      <span>Vertex</span> FX
+    </div>
+
+    <div class="online">
+      ● Online
+    </div>
+  </header>
+
+
+  <!-- =========================
+       LOGIN / REGISTER
+  ========================== -->
+
+  <section id="authSection" class="auth">
+
+    <div class="card">
+
+      <h1>Vertex FX</h1>
+
+      <p class="muted">
+        Trading & Wallet Platform
+      </p>
+
+
+      <div class="tabs">
+
+        <button
+          id="loginTab"
+          class="active"
+          onclick="showTab('login')"
+        >
+          Login
+        </button>
+
+        <button
+          id="registerTab"
+          onclick="showTab('register')"
+        >
+          Create Account
+        </button>
+
+      </div>
+
+
+      <!-- LOGIN -->
+
+      <div id="loginForm">
+
+        <label>Email</label>
+
+        <input
+          id="loginEmail"
+          type="email"
+          placeholder="you@example.com"
+        >
+
+
+        <label>Password</label>
+
+        <input
+          id="loginPassword"
+          type="password"
+          placeholder="Password"
+        >
+
+
+        <button
+          class="primary"
+          onclick="login()"
+        >
+          Login
+        </button>
+
+      </div>
+
+
+      <!-- REGISTER -->
+
+      <div id="registerForm" class="hidden">
+
+        <label>Full Name</label>
+
+        <input
+          id="registerName"
+          type="text"
+          placeholder="Full name"
+        >
+
+
+        <label>Email</label>
+
+        <input
+          id="registerEmail"
+          type="email"
+          placeholder="you@example.com"
+        >
+
+
+        <label>M-Pesa Phone</label>
+
+        <input
+          id="registerPhone"
+          type="text"
+          placeholder="2547XXXXXXXX"
+        >
+
+
+        <label>Password</label>
+
+        <input
+          id="registerPassword"
+          type="password"
+          placeholder="Minimum 6 characters"
+        >
+
+
+        <button
+          class="primary"
+          onclick="register()"
+        >
+          Create Account
+        </button>
+
+      </div>
+
+
+      <div
+        id="authMessage"
+        class="message hidden"
+      ></div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- =========================
+       MAIN APPLICATION
+  ========================== -->
+
+  <section
+    id="appSection"
+    class="hidden"
+  >
+
+    <div class="navigation">
+
+      <button onclick="showPage('dashboard')">
+        Dashboard
+      </button>
+
+      <button onclick="showPage('deposit')">
+        Deposit
+      </button>
+
+      <button onclick="showPage('withdraw')">
+        Withdraw
+      </button>
+
+      <button onclick="showPage('transactions')">
+        Transactions
+      </button>
+
+      <button
+        class="logout"
+        onclick="logout()"
+      >
+        Logout
+      </button>
+
+    </div>
+
+
+
+    <!-- DASHBOARD -->
+
+    <div id="dashboardPage">
+
+      <div class="card">
+
+        <div class="muted">
+          Welcome
+        </div>
+
+        <h2 id="userName">
+          Trader
+        </h2>
+
+        <p class="muted">
+          DEMO MODE
+        </p>
+
+      </div>
+
+
+      <div class="grid">
+
+        <div class="card">
+
+          <div class="muted">
+            Balance
+          </div>
+
+          <div
+            id="balance"
+            class="metric"
+          >
+            KES 0.00
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <div class="muted">
+            Equity
+          </div>
+
+          <div
+            id="equity"
+            class="metric"
+          >
+            KES 0.00
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <div class="muted">
+            Free Margin
+          </div>
+
+          <div
+            id="freeMargin"
+            class="metric"
+          >
+            KES 0.00
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <div class="muted">
+            EUR/USD
+          </div>
+
+          <div class="metric">
+            1.16834
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <p
+          id="userEmail"
+          class="muted"
+        ></p>
+
+        <p
+          id="userPhone"
+          class="muted"
+        ></p>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- DEPOSIT -->
+
+    <div
+      id="depositPage"
+      class="card hidden"
+    >
+
+      <h2>
+        M-Pesa Deposit
+      </h2>
+
+      <p class="muted">
+        Send an M-Pesa sandbox STK Push.
+      </p>
+
+
+      <label>
+        Amount (KES)
+      </label>
+
+      <input
+        id="depositAmount"
+        type="number"
+        min="1"
+        value="1"
+      >
+
+
+      <button
+        class="primary"
+        onclick="deposit()"
+      >
+        Send M-Pesa Prompt
+      </button>
+
+
+      <div
+        id="depositMessage"
+        class="message hidden"
+      ></div>
+
+    </div>
+
+
+
+    <!-- WITHDRAW -->
+
+    <div
+      id="withdrawPage"
+      class="card hidden"
+    >
+
+      <h2>
+        Withdraw
+      </h2>
+
+      <p class="muted">
+        Submit a withdrawal request.
+      </p>
+
+
+      <label>
+        Amount (KES)
+      </label>
+
+      <input
+        id="withdrawAmount"
+        type="number"
+        min="1"
+        value="1"
+      >
+
+
+      <button
+        class="primary"
+        onclick="withdraw()"
+      >
+        Request Withdrawal
+      </button>
+
+
+      <div
+        id="withdrawMessage"
+        class="message hidden"
+      ></div>
+
+    </div>
+
+
+
+    <!-- TRANSACTIONS -->
+
+    <div
+      id="transactionsPage"
+      class="card hidden"
+    >
+
+      <h2>
+        Transactions
+      </h2>
+
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+
+        </thead>
+
+
+        <tbody id="transactionRows">
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+
+  <footer>
+    Vertex FX © 2026
+  </footer>
+
+</div>
+
+
+
+<script>
+
+/* =========================================
+   BACKEND ADDRESS
+========================================= */
+
+const API_BASE =
+  "https://vertex-fx-b0lm.onrender.com";
+
+
+/* =========================================
+   USER SESSION
+========================================= */
+
+let token =
+  localStorage.getItem("vertexToken") || "";
+
+let currentUser = null;
+
+
+/* =========================================
+   API FUNCTION
+========================================= */
+
+async function api(
+  path,
+  options = {}
+) {
+
+  const headers = {
+    ...(options.headers || {})
+  };
+
+
+  if (options.body) {
+
+    headers["Content-Type"] =
+      "application/json";
+
+  }
+
+
+  if (token) {
+
+    headers["Authorization"] =
+      "Bearer " + token;
+
+  }
+
+
+  const response =
+    await fetch(
+      API_BASE + path,
+      {
+        ...options,
+        headers
+      }
+    );
+
+
+  const text =
+    await response.text();
+
+
+  let data = {};
+
+
+  try {
+
+    data =
+      text
+        ? JSON.parse(text)
+        : {};
+
+  }
+
+  catch (error) {
+
+    throw new Error(
+      "Server returned non-JSON HTTP " +
+      response.status +
+      ": " +
+      text.substring(0, 200)
+    );
+
+  }
+
+
+  if (!response.ok) {
+
+    throw new Error(
+      data.message ||
+      "Request failed: HTTP " +
+      response.status
+    );
+
+  }
+
+
+  return data;
+
 }
 
 
-/* =========================
-   M-PESA STK PUSH
-========================= */
+/* =========================================
+   MESSAGE
+========================================= */
 
-app.post("/api/mpesa/deposit", async (req, res) => {
+function showMessage(
+  id,
+  message,
+  success = false
+) {
+
+  const element =
+    document.getElementById(id);
+
+  element.textContent =
+    message;
+
+  element.classList.remove(
+    "hidden"
+  );
+
+  element.className =
+    "message " +
+    (
+      success
+        ? "success"
+        : "error"
+    );
+
+}
+
+
+/* =========================================
+   LOGIN / REGISTER TABS
+========================================= */
+
+function showTab(type) {
+
+  const login =
+    type === "login";
+
+
+  document
+    .getElementById("loginForm")
+    .classList
+    .toggle(
+      "hidden",
+      !login
+    );
+
+
+  document
+    .getElementById("registerForm")
+    .classList
+    .toggle(
+      "hidden",
+      login
+    );
+
+
+  document
+    .getElementById("loginTab")
+    .classList
+    .toggle(
+      "active",
+      login
+    );
+
+
+  document
+    .getElementById("registerTab")
+    .classList
+    .toggle(
+      "active",
+      !login
+    );
+
+}
+
+
+/* =========================================
+   REGISTER
+========================================= */
+
+async function register() {
 
   try {
 
-    const {
-      phone,
-      amount,
-      userId
-    } = req.body;
+    const name =
+      document
+        .getElementById("registerName")
+        .value
+        .trim();
 
-    if (!phone || !amount || !userId) {
 
-      return res.status(400).json({
-        success: false,
-        message: "Phone, amount and userId are required."
-      });
+    const email =
+      document
+        .getElementById("registerEmail")
+        .value
+        .trim();
+
+
+    const phone =
+      document
+        .getElementById("registerPhone")
+        .value
+        .trim();
+
+
+    const password =
+      document
+        .getElementById("registerPassword")
+        .value;
+
+
+    if (
+      !name ||
+      !email ||
+      !phone ||
+      !password
+    ) {
+
+      throw new Error(
+        "Please fill in all fields."
+      );
 
     }
 
-    const token = await getAccessToken();
 
-    const timestamp =
-      new Date()
-        .toISOString()
-        .replace(/[-T:.Z]/g, "")
-        .substring(0, 14);
+    const data =
+      await api(
+        "/api/register",
+        {
+          method: "POST",
 
-    const password =
-      Buffer.from(
-        process.env.MPESA_SHORTCODE +
-        process.env.MPESA_PASSKEY +
-        timestamp
-      ).toString("base64");
+          body: JSON.stringify({
+            name,
+            email,
+            phone,
+            password
+          })
 
-    const payload = {
-
-      BusinessShortCode:
-        process.env.MPESA_SHORTCODE,
-
-      Password:
-        password,
-
-      Timestamp:
-        timestamp,
-
-      TransactionType:
-        "CustomerPayBillOnline",
-
-      Amount:
-        Number(amount),
-
-      PartyA:
-        phone,
-
-      PartyB:
-        process.env.MPESA_SHORTCODE,
-
-      PhoneNumber:
-        phone,
-
-      CallBackURL:
-        process.env.MPESA_CALLBACK_URL,
-
-      AccountReference:
-        "VERTEXFX",
-
-      TransactionDesc:
-        "Vertex FX Deposit"
-
-    };
-
-    const response = await axios.post(
-
-      "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-
-      payload,
-
-      {
-        headers: {
-          Authorization:
-            "Bearer " + token,
-
-          "Content-Type":
-            "application/json"
         }
-      }
+      );
 
+
+    token =
+      data.token;
+
+
+    localStorage.setItem(
+      "vertexToken",
+      token
     );
 
-    transactions.push({
 
-      userId: userId,
-
-      type: "DEPOSIT",
-
-      amount: Number(amount),
-
-      phone: phone,
-
-      status: "PENDING",
-
-      checkoutRequestID:
-        response.data.CheckoutRequestID,
-
-      createdAt:
-        new Date().toISOString()
-
-    });
-
-    res.json({
-
-      success: true,
-
-      message:
-        "M-Pesa payment request sent to the customer's phone.",
-
-      checkoutRequestID:
-        response.data.CheckoutRequestID
-
-    });
+    await loadApplication();
 
   }
 
-  catch(error) {
+  catch (error) {
 
-    console.error(
-      "M-Pesa deposit error:",
-      error.response?.data ||
+    showMessage(
+      "authMessage",
       error.message
     );
 
-    res.status(500).json({
-
-      success: false,
-
-      message:
-        "Unable to start M-Pesa payment."
-
-    });
-
   }
 
-});
+}
 
 
-/* =========================
-   M-PESA CALLBACK
-========================= */
+/* =========================================
+   LOGIN
+========================================= */
 
-app.post("/api/mpesa/callback", (req, res) => {
-
-  console.log(
-    "M-Pesa callback:",
-    JSON.stringify(req.body, null, 2)
-  );
-
-  const callback =
-    req.body?.Body?.stkCallback;
-
-  if (!callback) {
-
-    return res.json({
-      ResultCode: 0,
-      ResultDesc: "Accepted"
-    });
-
-  }
-
-  const checkoutRequestID =
-    callback.CheckoutRequestID;
-
-  const transaction =
-    transactions.find(
-      item =>
-        item.checkoutRequestID ===
-        checkoutRequestID
-    );
-
-  if (transaction) {
-
-    if (callback.ResultCode === 0) {
-
-      transaction.status =
-        "COMPLETED";
-
-      transaction.mpesaReceipt =
-        callback.CallbackMetadata?.Item
-          ?.find(
-            item =>
-              item.Name ===
-              "MpesaReceiptNumber"
-          )?.Value;
-
-    }
-
-    else {
-
-      transaction.status =
-        "FAILED";
-
-      transaction.failureReason =
-        callback.ResultDesc;
-
-    }
-
-  }
-
-  res.json({
-
-    ResultCode: 0,
-
-    ResultDesc: "Accepted"
-
-  });
-
-});
-
-
-/* =========================
-   TRANSACTION STATUS
-========================= */
-
-app.get(
-  "/api/transactions/:userId",
-  (req, res) => {
-
-    const userTransactions =
-      transactions.filter(
-        item =>
-          String(item.userId) ===
-          String(req.params.userId)
-      );
-
-    res.json({
-
-      success: true,
-
-      transactions:
-        userTransactions
-
-    });
-
-  }
-);
-
-
-/* =========================
-   WITHDRAWAL REQUEST
-========================= */
-
-app.post("/api/mpesa/withdraw", async (req, res) => {
+async function login() {
 
   try {
 
-    const {
-      phone,
-      amount,
-      userId
-    } = req.body;
+    const email =
+      document
+        .getElementById("loginEmail")
+        .value
+        .trim();
 
-    if (!phone || !amount || !userId) {
 
-      return res.status(400).json({
+    const password =
+      document
+        .getElementById("loginPassword")
+        .value;
 
-        success: false,
 
-        message:
-          "Phone, amount and userId are required."
+    const data =
+      await api(
+        "/api/login",
+        {
+          method: "POST",
 
-      });
+          body: JSON.stringify({
+            email,
+            password
+          })
+
+        }
+      );
+
+
+    token =
+      data.token;
+
+
+    localStorage.setItem(
+      "vertexToken",
+      token
+    );
+
+
+    await loadApplication();
+
+  }
+
+  catch (error) {
+
+    showMessage(
+      "authMessage",
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================================
+   LOAD APPLICATION
+========================================= */
+
+async function loadApplication() {
+
+  try {
+
+    currentUser =
+      await api("/api/me");
+
+
+    document
+      .getElementById("authSection")
+      .classList
+      .add("hidden");
+
+
+    document
+      .getElementById("appSection")
+      .classList
+      .remove("hidden");
+
+
+    document
+      .getElementById("userName")
+      .textContent =
+      currentUser.name;
+
+
+    document
+      .getElementById("userEmail")
+      .textContent =
+      currentUser.email;
+
+
+    document
+      .getElementById("userPhone")
+      .textContent =
+      currentUser.phone;
+
+
+    updateBalance();
+
+    await loadTransactions();
+
+    showPage("dashboard");
+
+  }
+
+  catch (error) {
+
+    logout();
+
+  }
+
+}
+
+
+/* =========================================
+   BALANCE
+========================================= */
+
+function updateBalance() {
+
+  const amount =
+    Number(
+      currentUser.balance || 0
+    );
+
+
+  const formatted =
+    "KES " +
+    amount.toFixed(2);
+
+
+  document
+    .getElementById("balance")
+    .textContent =
+    formatted;
+
+
+  document
+    .getElementById("equity")
+    .textContent =
+    formatted;
+
+
+  document
+    .getElementById("freeMargin")
+    .textContent =
+    formatted;
+
+}
+
+
+/* =========================================
+   PAGES
+========================================= */
+
+function showPage(page) {
+
+  const pages = [
+    "dashboard",
+    "deposit",
+    "withdraw",
+    "transactions"
+  ];
+
+
+  pages.forEach(
+    function(item) {
+
+      document
+        .getElementById(
+          item + "Page"
+        )
+        .classList
+        .toggle(
+          "hidden",
+          item !== page
+        );
+
+    }
+  );
+
+}
+
+
+/* =========================================
+   M-PESA DEPOSIT
+========================================= */
+
+async function deposit() {
+
+  try {
+
+    const amount =
+      Number(
+        document
+          .getElementById(
+            "depositAmount"
+          )
+          .value
+      );
+
+
+    if (amount < 1) {
+
+      throw new Error(
+        "Enter a valid amount."
+      );
 
     }
 
-    /*
-      A withdrawal is first recorded as PENDING.
 
-      Do not automatically send money until:
-      - the user's balance has been checked
-      - the withdrawal is authorized
-      - your M-Pesa B2C setup is approved
-    */
+    const data =
+      await api(
+        "/api/mpesa/deposit",
+        {
+          method: "POST",
 
-    const withdrawal = {
+          body: JSON.stringify({
+            amount,
+            phone:
+              currentUser.phone
+          })
 
-      id:
-        Date.now(),
+        }
+      );
 
-      userId:
-        userId,
 
-      phone:
-        phone,
-
-      amount:
-        Number(amount),
-
-      type:
-        "WITHDRAWAL",
-
-      status:
-        "PENDING",
-
-      createdAt:
-        new Date().toISOString()
-
-    };
-
-    transactions.push(
-      withdrawal
+    showMessage(
+      "depositMessage",
+      data.message ||
+      "M-Pesa prompt sent.",
+      true
     );
 
-    res.json({
 
-      success: true,
-
-      message:
-        "Withdrawal request received.",
-
-      withdrawalId:
-        withdrawal.id
-
-    });
+    await loadTransactions();
 
   }
 
-  catch(error) {
+  catch (error) {
 
-    console.error(error);
-
-    res.status(500).json({
-
-      success: false,
-
-      message:
-        "Withdrawal request failed."
-
-    });
+    showMessage(
+      "depositMessage",
+      error.message
+    );
 
   }
 
-});
+}
 
 
-/* =========================
-   START SERVER
-========================= */
+/* =========================================
+   WITHDRAW
+========================================= */
 
-app.listen(
-  PORT,
-  () => {
+async function withdraw() {
+
+  try {
+
+    const amount =
+      Number(
+        document
+          .getElementById(
+            "withdrawAmount"
+          )
+          .value
+      );
+
+
+    if (amount < 1) {
+
+      throw new Error(
+        "Enter a valid amount."
+      );
+
+    }
+
+
+    const data =
+      await api(
+        "/api/withdraw",
+        {
+          method: "POST",
+
+          body: JSON.stringify({
+            amount
+          })
+
+        }
+      );
+
+
+    showMessage(
+      "withdrawMessage",
+      data.message ||
+      "Withdrawal request received.",
+      true
+    );
+
+
+    await loadApplication();
+
+    showPage("withdraw");
+
+  }
+
+  catch (error) {
+
+    showMessage(
+      "withdrawMessage",
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================================
+   TRANSACTIONS
+========================================= */
+
+async function loadTransactions() {
+
+  try {
+
+    const data =
+      await api(
+        "/api/transactions"
+      );
+
+
+    const rows =
+      document
+        .getElementById(
+          "transactionRows"
+        );
+
+
+    const transactions =
+      data.transactions || [];
+
+
+    if (!transactions.length) {
+
+      rows.innerHTML =
+        "<tr>" +
+        "<td colspan='4'>" +
+        "No transactions yet." +
+        "</td>" +
+        "</tr>";
+
+      return;
+
+    }
+
+
+    rows.innerHTML =
+      transactions
+        .map(
+          function(transaction) {
+
+            return (
+              "<tr>" +
+
+              "<td>" +
+              transaction.type +
+              "</td>" +
+
+              "<td>KES " +
+              Number(
+                transaction.amount
+              ).toFixed(2) +
+              "</td>" +
+
+              "<td>" +
+              transaction.status +
+              "</td>" +
+
+              "<td>" +
+              new Date(
+                transaction.createdAt
+              ).toLocaleString() +
+              "</td>" +
+
+              "</tr>"
+            );
+
+          }
+        )
+        .join("");
+
+  }
+
+  catch (error) {
 
     console.log(
-      `Vertex FX backend running on port ${PORT}`
+      "Transaction error:",
+      error
     );
 
   }
-);
+
+}
+
+
+/* =========================================
+   LOGOUT
+========================================= */
+
+function logout() {
+
+  token = "";
+
+  currentUser = null;
+
+
+  localStorage.removeItem(
+    "vertexToken"
+  );
+
+
+  document
+    .getElementById(
+      "appSection"
+    )
+    .classList
+    .add("hidden");
+
+
+  document
+    .getElementById(
+      "authSection"
+    )
+    .classList
+    .remove("hidden");
+
+}
+
+
+/* =========================================
+   AUTOMATIC LOGIN
+========================================= */
+
+if (token) {
+
+  loadApplication();
+
+}
+
+</script>
+
+</body>
+</html>
